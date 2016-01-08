@@ -8,6 +8,8 @@ class Track extends events.EventEmitter {
    * @param {Number} [height = 100]
    */
   constructor($el, height, width) {
+    super();
+
     if (!height)
       height = 100;
     if (!width)
@@ -110,7 +112,7 @@ class Track extends events.EventEmitter {
     });
     this.$stage.addName('track-stage');
 
-    this.$interactions = new Konva.FastLayer({});
+    this.$interactions = new Konva.Layer({});
     this.$interactions.addName('track-interactions');
 
     this.$stage.add(this.$interactions);
@@ -123,8 +125,6 @@ class Track extends events.EventEmitter {
    */
   add(layer) {
     this.layers.push(layer);
-    // Create a default renderingContext for the layer if missing
-    this.$layout.appendChild(layer.$el);
   }
 
   /**
@@ -134,8 +134,7 @@ class Track extends events.EventEmitter {
    */
   remove(layer) {
     this.layers.splice(this.layers.indexOf(layer), 1);
-    // Removes layer from its container
-    this.$layout.removeChild(layer.$el);
+    // TODO: Removes all konva layers that belong to the provided Layer.
   }
 
   /**
@@ -145,7 +144,8 @@ class Track extends events.EventEmitter {
    * @return {bool}
    */
   hasElement($el) {
-    // TODO: deprecated
+    throw new Error("deprecated");
+
     do {
       if ($el === this.$el) {
         return true;
@@ -187,9 +187,7 @@ class Track extends events.EventEmitter {
     const width = Math.round(renderingContext.visibleWidth);
     const offsetX = Math.round(renderingContext.timeToPixel(renderingContext.offset));
 
-    this.$stage.width(this.width).height(this.height);
-
-    // TODO: apply offset
+    this.$stage.width(this.width).height(this.height).offsetX(offsetX);
   }
 
   /**

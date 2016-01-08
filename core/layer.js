@@ -2,7 +2,7 @@
 
 class Layer extends events.EventEmitter {
 
-	constructor(stage, dataType, data, options) {
+	constructor(track, dataType, data, options) {
 		super();
 
 		if (!options) 
@@ -13,20 +13,20 @@ class Layer extends events.EventEmitter {
 			top: 0,
 			opacity: 1,
 			yDomain: [0, 1],
-			className: null,
+			className: null, // TODO
 			selectedClassName: 'selected',
 			context: {
 				handlerWidth: 2,
 				handlerOpacity: 0.2,
 				opacity: 0.1, 
 			}, 
-			contextHandlerWidth: 2, // TODO
 			hittable: true, // when false the layer is not returned by `BaseState.getHitLayers`
 			id: '', // used ?
-			overflow: 'hidden', // usefull ?
 		};
 
-		this.track = { stage: stage }; //TODO
+		this._behavior = null;
+
+		this.track = track;
 
 		/**
 		* Parameters of the layers, `defaults` overrided with options.
@@ -37,8 +37,8 @@ class Layer extends events.EventEmitter {
 
 		this._shapeConfiguration = null;			 // { ctor, accessors, options }
 		this._commonShapeConfiguration = null; // { ctor, accessors, options }
-		this._$dataToShape = new Map();
-		this._$shapeToData = new Map();
+		this._$datumToShape = new Map();
+		this._$shapeToDatum = new Map();
 		this._commonShape = null;
 		this._renderingContext = {};
 		// this._data = data;
@@ -49,14 +49,18 @@ class Layer extends events.EventEmitter {
 			.domain(this.params.yDomain)
 			.range([this.params.height, 0]);
 
+		this.Ls = new Set();
 
-		this._commonShapeLayer = new Konva.FastLayer({});
+		this._commonShapeLayer = new Konva.Layer({});
 		this._commonShapeLayer.addName('common-shape-layer');
+		this._commonShapeLayer.layer = this;
 
-		this._dragLayer = new Konva.FastLayer({});
+		this._dragLayer = new Konva.Layer({});
 		this._dragLayer.addName('drag-layer');
+		this._dragLayer.layer = this;
 
-		this._contextLayer = new Konva.FastLayer({});
+		this._contextLayer = new Konva.Layer({});
+		this._contextLayer.layer = this;
 		this._contextLayer.addName('context-layer');
 		this._contextLayer.visible(this._isContextEditable);
 		this._contextShape = new Segment({});
@@ -74,20 +78,46 @@ class Layer extends events.EventEmitter {
 			this._contextLayer.add(this._contextShape.$el[i]);
 		}
 		
-		stage.add(this._contextLayer);
-		stage.add(this._commonShapeLayer);
+		this.track.$stage.add(this._contextLayer);
+		this.track.$stage.add(this._commonShapeLayer);
 
 		const that = this;
 
-		// this._contentLayer.on('mousedown', (o) => that.track.stage.fire('event', that.createEventObj(o, layer, 'mousedown')));
-		// this._contentLayer.on('mousemove', (o) => that.track.stage.fire('event', that.createEventObj(o, layer, 'mousemove')));
-		// this._contentLayer.on('mouseup', (o) => that.track.stage.fire('event', that.createEventObj(o, layer, 'mouseup')));
-		// this._contentLayer.on('mouseover', (o) => that.track.stage.fire('event', that.createEventObj(o, layer, 'mouseover')));
-		// this._contentLayer.on('mouseout', (o) => that.track.stage.fire('event', that.createEventObj(o, layer, 'mouseout')));
-		// this._contentLayer.on('dblclick', (o) => that.track.stage.fire('event', that.createEventObj(o, layer, 'dblclick')));
-
-		// TODO: use a dynamic number of content layers in order to balance the work load!!!
+		this.Ls.add(this._contextLayer);
+		this.Ls.add(this._dragLayer);
+		this.Ls.add(this._commonShapeLayer);
 		
+	}
+
+	_destroy(it) {
+		var entry = it.next();
+		while (!entry.done) {
+			var layer = entry.value;
+			layer.destroy();
+		}
+	}
+
+	destroy() {
+		this._contextShape.destroy();
+		this._destroy(this._$datumToShape.values());
+		this._destroy(this.Ls.values);
+		this.Ls.clear();
+
+		this._commonShapeLayer = null;
+		this._dragLayer = null;
+		this._contextLayer = null;
+		this._contextShape = null;
+		this.track = track;
+		this.params = null;
+		this.timeContextBehavior = null;
+		this._shapeConfiguration = null;
+		this._commonShapeConfiguration = null;
+		this._$datumToShape = null;
+		this._$shapeToDatum = null;
+		this._commonShape = null;
+		this._renderingContext = null;
+		this._isContextEditable = null;
+		this._behavior = null;
 	}
 
 	createEventObj(o, layer, type) {
@@ -189,11 +219,11 @@ class Layer extends events.EventEmitter {
 	// --------------------------------------
 
 	getDatumFromShape($shape) {
-		return this._$dataToShape.get($shape);
+		return this._$datumToShape.get($shape);
 	}
 
 	getShapeFromDatum($datum) {
-		return this._$shapeToData.get($datum);
+		return this._$shapeToDatum.get($datum);
 	}
 
 	/**
@@ -225,9 +255,9 @@ class Layer extends events.EventEmitter {
 
 		const $filteredItems = [];
 
-		const $entries = this._$dataToShape.entries();
+		const $entries = this._$datumToShape.entries();
 
-		for (var i=0; i < $this._$dataToShape.size; i++) {
+		for (var i=0; i < $this._$datumToShape.size; i++) {
 			var entry = $entries.next();
 
 			if (entry.done)	break;
@@ -250,17 +280,17 @@ class Layer extends events.EventEmitter {
 		this.updateShapes();
 		this.updateContainer();
 
-		this.track.stage.find('.content-layer').forEach((layer) => layer.draw());
-		this.track.stage.find('.context-layer').forEach((layer) => layer.draw());
+		this.track.$stage.find('.content-layer').forEach((layer) => layer.draw());
+		this.track.$stage.find('.context-layer').forEach((layer) => layer.draw());
 		this._commonShapeLayer.draw();
 	}
 
 	updateShapes() {
 
-		const data = new Array(this._$dataToShape.size);
-		const $entries = this._$dataToShape.entries();
+		const data = new Array(this._$datumToShape.size);
+		const $entries = this._$datumToShape.entries();
 
-		for (var i=0; i < this._$dataToShape.size; i++) {
+		for (var i=0; i < this._$datumToShape.size; i++) {
 			var entry = $entries.next();
 
 			if (entry.done)	break;
@@ -288,16 +318,16 @@ class Layer extends events.EventEmitter {
 		const top    = this.params.top;
 		const height = this.params.height;
 
-		const stage = this.track.stage;
+		const stage = this.track.$stage;
 
 
 
-		this.track.stage.find('.content-layer').forEach((layer) => {
+		this.track.$stage.find('.content-layer').forEach((layer) => {
 			layer.x(this.timeContext.parent.timeToPixel(this.timeContext.start))
 				.offsetX(offset)
 				.clip({x:offset, y:0, width: width, height: this.params.height});
 		});
-		this.track.stage.find('.context-layer').forEach((layer) => {
+		this.track.$stage.find('.context-layer').forEach((layer) => {
 			layer.x(this.timeContext.parent.timeToPixel(this.timeContext.start))
 				.offsetX(offset)
 				.clip({x:offset, y:0, width: width, height: this.params.height});
@@ -332,16 +362,18 @@ class Layer extends events.EventEmitter {
 		// TODO: use Behavior
 	}
 
-	toDragLayer(shape) {
+	toDrag(shape) {
 		if (shape.$el instanceof Array) {
-			// TODO
+			for (var i=0; i<shape.$el.length; i++) 
+				this._dragLayer.add(shape.$el[i]);
 		} else {
 			this._dragLayer.add(shape.$el);
 		}
 	}
 
-	_add(stage, shape) {
-		const LIMIT = 100;
+	_shapeElementsStageAllocation(stage, shape) {
+		// TODO: remove empty layers
+		const LIMIT = 1000;
 		const contentLayers = stage.find('.content-layer');
 		var els = (shape.$el instanceof Array)? shape.$el : [shape.$el];
 		var it = els.entries();
@@ -357,6 +389,7 @@ class Layer extends events.EventEmitter {
 		const that = this;
 		while (!entry.done) {
 			const L = new Konva.Layer({});
+			L.layer = this;
 			L.addName('content-layer');
 			var el = entry.value[1];
 			L.on('mousedown', (o) => stage.fire('event', that.createEventObj(o, L, 'mousedown')));
@@ -381,33 +414,36 @@ class Layer extends events.EventEmitter {
 		shape.install(accessors);
 		shape.render(this._renderingContext);
 		shape.layer = this;
-		this._add(this.track.stage, shape);
-		this._$dataToShape.set(datum, shape);
-		this._$shapeToData.set(shape, datum);
+		shape.datum = datum;
+		this._shapeElementsStageAllocation(this.track.$stage, shape);
+		this._$datumToShape.set(datum, shape);
+		this._$shapeToDatum.set(shape, datum);
 
 	}
 
 	remove(datum) {
-		const shape = this._$dataToShape.get(datum);
+		const shape = this._$datumToShape.get(datum);
 		if (shape) {
 			shape.layer = null;
 			shape.destroy();
-			this._$dataToShape.delete(datum);
-			this._$shapeToData.delete(shape);
+			this._$datumToShape.delete(datum);
+			this._$shapeToDatum.delete(shape);
 
-			this.track.stage.find('.content-layer').forEach((layer) => {
-				if (layer.children == 0)
+			this.track.$stage.find('.content-layer').forEach((layer) => {
+				if (layer.children == 0) {
 					layer.destroy();
+					this.Ls.delete(layer);
+				}
 			});
 		}
 	}
 
 	get data() {
-		const data = new Array(this._$dataToShape.size);
+		const data = new Array(this._$datumToShape.size);
 		
-		const $entries = this._$dataToShape.entries();
+		const $entries = this._$datumToShape.entries();
 
-		for (var i=0; i < this._$dataToShape.size; i++) {
+		for (var i=0; i < this._$datumToShape.size; i++) {
 			var entry = $entries.next();
 			if (entry.done)	break;
 			var $datum = entry.value[0];
@@ -418,7 +454,7 @@ class Layer extends events.EventEmitter {
 	}
 
 	edit($item, dx, dy, $target) {
-		// TODO
+		throw new Error("deprecated");
 	}
 
 

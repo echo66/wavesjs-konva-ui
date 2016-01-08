@@ -151,7 +151,15 @@ class Waveform extends BaseShape {
 
     this.$waveform.fill(this.params.waveform.color).opacity(this.params.waveform.opacity).y(0);
 
-    this.$waveform.clearCache().perfectDrawEnabled(false);
+    this.$waveform.perfectDrawEnabled(false);
+
+    if (this.oldPixelsPerSecond == renderingContext.pixelsPerSecond) 
+      return;
+    else 
+      this.oldPixelsPerSecond = renderingContext.pixelsPerSecond;
+
+
+    this.$waveform.clearCache();
 
     // THIS VERSION GENERATES TWO PATHS, BOTH MIRROR OF THE OTHER, ALIGNED AT THE CENTER OF THE YDOMAIN.
     const arr = this.data(d).subarray(this.bufferStart(d), this.bufferEnd(d));
@@ -159,7 +167,6 @@ class Waveform extends BaseShape {
     const WANTEDSIZE = this.params.waveformQuality ;
     const that = this;
     const speed = ORIGINSIZE / WANTEDSIZE;
-    // const speed = 1.2;
     const yDomain = renderingContext.valueToPixel.domain();
     const midY = (Math.max(yDomain[0], yDomain[1]) - Math.min(yDomain[0], yDomain[1])) / 2;
     const pMidY = renderingContext.valueToPixel(midY);

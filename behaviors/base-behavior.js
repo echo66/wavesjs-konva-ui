@@ -118,5 +118,10 @@ class BaseBehavior {
   /**
    * TODO
    */
+  highlight(datum, isHighlighted) { }
+
+  /**
+   * TODO
+   */
   handleEvent(event) {}
 }
