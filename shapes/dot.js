@@ -19,6 +19,7 @@ class Dot extends BaseShape {
 
     this.$el = new Konva.Circle({});
     this.$el.shape = this;
+    this.$el.perfectDrawEnabled(false);
 
     return this.$el;
   }

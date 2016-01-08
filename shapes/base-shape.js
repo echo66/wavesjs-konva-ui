@@ -12,9 +12,11 @@ class BaseShape {
     /** @type {Object} - Object containing the global parameters of the shape */
     this.params = Object.assign({}, this._getDefaults(), options);
 
+    this.layer = null;
+
     this._visible = true;
     this._highlight = false;
-    this._datum = undefined;
+    this._datum = null;
 
     // create accessors methods and set default accessor functions
     const accessors = this._getAccessorList();
@@ -34,10 +36,10 @@ class BaseShape {
     } else if (this.$el) {
       this.$el.shape = null;
     }
-    this.$el = undefined;
-    this.$params = undefined;
-    this._accessors = undefined;
-    this._datum = undefined;
+    this.$el = null;
+    this.$params = null;
+    this._accessors = null;
+    this._datum = null;
   }
 
   /**

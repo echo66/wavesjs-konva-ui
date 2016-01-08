@@ -114,4 +114,9 @@ class BaseBehavior {
   edit(renderingContext, shape, datum, dx, dy, $target) {
     // must be implemented in children
   }
+
+  /**
+   * TODO
+   */
+  handleEvent(event) {}
 }

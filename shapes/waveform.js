@@ -30,11 +30,13 @@ class Waveform extends BaseShape {
   _getAccessorList() {
     // return { y: 0 };
     // TODO: delete all but sampleRate.
-    return { data: [], x: 0, y: 0, width: 10000, bufferStart: 0, bufferEnd: 0, sampleRate: 44100, color: 'black' };
+    return { data: [], x: 0, width: 10000, bufferStart: 0, bufferEnd: 0, sampleRate: 44100, color: 'black', text: "" };
   }
 
   _getDefaults() {
     return {
+      waveformQuality: 5000, 
+      squaringFactor: 1, 
       displayHandlers: true, 
       headerHeightRatio: 0.1, // 10% of the body height
       waveform: {
@@ -123,17 +125,16 @@ class Waveform extends BaseShape {
     if (!this.visible)  return;
 
 
-    const x = renderingContext.timeToPixel(this.x(datum));
-    const y = renderingContext.valueToPixel(this.y(datum));
-
-    const width = renderingContext.timeToPixel(this.width(datum));
+    const x = renderingContext.timeToPixel(this.x(d));
+    const width = renderingContext.timeToPixel(this.width(d));
     const height = renderingContext.height;
     const color = this.params.waveform.color;
-    const opacity = 1; // TODO
 
     for (var i in this.$el) {
-      this.$el[i].x(x).y(y);
+      this.$el[i].x(x).y(0);
     }
+
+    this.$label.text(this.text(d)).x(x+10).y(5);
 
     this.$header.width(Math.max(width, 0))
                 .height(height * this.params.headerHeightRatio)
@@ -144,25 +145,21 @@ class Waveform extends BaseShape {
                 .fill(this.params.body.color)
                 .opacity(this.params.body.opacity);
 
-    this.$leftHandler.height(height).fill(this.params.handler.color);
+    this.$leftHandler.width(this.params.handler.width).height(height).fill(this.params.handler.color);
 
+    this.$rightHandler.x(x + width - this.params.handler.width).width(this.params.handler.width).height(height).fill(this.params.handler.color);
 
-    this.$rightHandler.x(x + width - this.params.handlerWidth).height(height).fill(this.params.handler.color);
+    this.$waveform.fill(this.params.waveform.color).opacity(this.params.waveform.opacity).y(0);
 
-    if(this.oldWidth == width) {
-      // TODO
-      return;
-    }
-    this.oldWidth = width;
-
+    this.$waveform.clearCache().perfectDrawEnabled(false);
 
     // THIS VERSION GENERATES TWO PATHS, BOTH MIRROR OF THE OTHER, ALIGNED AT THE CENTER OF THE YDOMAIN.
-    const arr = this.data(datum).subarray(0, this.width(datum)); // TODO
+    const arr = this.data(d).subarray(this.bufferStart(d), this.bufferEnd(d));
     const ORIGINSIZE = arr.length;
     const WANTEDSIZE = this.params.waveformQuality ;
     const that = this;
-    // const speed = ORIGINSIZE / WANTEDSIZE;
-    const speed = 1.2;
+    const speed = ORIGINSIZE / WANTEDSIZE;
+    // const speed = 1.2;
     const yDomain = renderingContext.valueToPixel.domain();
     const midY = (Math.max(yDomain[0], yDomain[1]) - Math.min(yDomain[0], yDomain[1])) / 2;
     const pMidY = renderingContext.valueToPixel(midY);
@@ -172,7 +169,7 @@ class Waveform extends BaseShape {
 
     for (let i = 0; i < ORIGINSIZE; i += speed) {
 
-      let x  = (i/ORIGINSIZE) * this.width(datum);
+      let x  = (i/ORIGINSIZE) * this.width(d) / this.params.squaringFactor;
       let px = renderingContext.timeToPixel(x);
 
       let Y  = this.linear_interpolation(arr, i);
@@ -187,12 +184,11 @@ class Waveform extends BaseShape {
 
     }
 
-    let pWidth = renderingContext.timeToPixel(this.width(datum));
-    pathBottom = 'M' + `0,${pMidY}L` + pathBottom + `${pWidth},${pMidY}` + 'z';
-    pathUpper  = 'M' + `${0},${pMidY}L` + pathUpper  + `${pWidth},${pMidY}` + 'z';
+    let pWidth = renderingContext.timeToPixel(this.width(d));
+    pathBottom = 'M' + `${0},${pMidY}L` + pathBottom + `${pWidth/ this.params.squaringFactor},${pMidY}` + 'z';
+    pathUpper  = 'M' + `${0},${pMidY}L` + pathUpper  + `${pWidth/ this.params.squaringFactor},${pMidY}` + 'z';
 
-    this.$waveform.data(pathUpper+pathBottom)
-                  .fill(this.color(datum)).y(0);
+    this.$waveform.data(pathUpper + pathBottom).cache();
     // TODO
   }
 
@@ -218,7 +214,3 @@ class Waveform extends BaseShape {
     return arr[first] * (1 - frac) + arr[second] * frac;
   }
 }
-
-scales.linear()
-      .domain([bufferStart, bufferEnd])
-      .range([x, x + duration]);

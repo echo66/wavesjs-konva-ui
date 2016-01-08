@@ -21,12 +21,13 @@ class Line extends BaseShape {
     if (this.$el) { return this.$el; }
 
     this.$el = new Konva.Path({});
-    this.$el.shape = this;
+    this.$el.perfectDrawEnabled(false);
 
     return this.$el;
   }
 
   update(renderingContext, data) {
+
     data = data.slice(0);
     data.sort((a, b) => this.cx(a) < this.cx(b) ? -1 : 1);
 
