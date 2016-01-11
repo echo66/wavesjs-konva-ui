@@ -19,7 +19,6 @@ class Layer extends events.EventEmitter {
 				handlerWidth: 2,
 				handlerOpacity: 0.2,
 				opacity: 0.1, 
-				color: '#787878',
 			}, 
 			hittable: true, // when false the layer is not returned by `BaseState.getHitLayers`
 			id: '', // used ?
@@ -52,18 +51,18 @@ class Layer extends events.EventEmitter {
 
 		this.Ls = new Set();
 
-		this._commonShapeLayer = new Konva.FastLayer({});
+		this._commonShapeLayer = new Konva.Layer({});
 		this._commonShapeLayer.addName('common-shape-layer');
 		this._commonShapeLayer.layer = this;
 
 		this._contextLayer = new Konva.Layer({});
 		this._contextLayer.layer = this;
 		this._contextLayer.addName('context-layer');
-		this.setContextEditable(this._isContextEditable);
+		this._contextLayer.visible(this._isContextEditable);
 		this._contextShape = new Segment({});
 		this._contextShape.install({
-			opacity	: () => this.params.context.opacity, 
-			color	: () => this.params.context.color, 
+			opacity	: () => 0.1, // TODO
+			color	: () => '#787878', // TODO
 			width	: () => this.timeContext.duration,
 			height	: () => this._renderingContext.valueToPixel.domain()[1],
 			y		: () => this._renderingContext.valueToPixel.domain()[0],
@@ -80,8 +79,8 @@ class Layer extends events.EventEmitter {
 
 		const that = this;
 
-		// this.Ls.add(this._contextLayer);
-		// this.Ls.add(this._commonShapeLayer);
+		this.Ls.add(this._contextLayer);
+		this.Ls.add(this._commonShapeLayer);
 		
 	}
 
@@ -114,6 +113,17 @@ class Layer extends events.EventEmitter {
 		this._renderingContext = null;
 		this._isContextEditable = null;
 		this._behavior = null;
+	}
+
+	createEventObj(o, layer, type) {
+		var evtObj = { 
+			target: o.target, 
+			shape: o.target.shape, 
+			layer: layer, 
+			originalEvent: o.evt, 
+			eventType: type
+		};
+		return evtObj;
 	}
 	
 	/**
@@ -169,9 +179,7 @@ class Layer extends events.EventEmitter {
 	setContextEditable(editable) {
 		if (editable == undefined)
 			editable = true;
-		// this._contextLayer.visible(editable);
-		this._contextLayer.opacity((editable)? 1 : 0);
-		this._contextLayer.listening(editable);
+		this._contextLayer.visible(editable);
 		this._isContextEditable = editable;
 	}
 	
@@ -224,7 +232,6 @@ class Layer extends events.EventEmitter {
 	* @return {Array} - list of the items presents in the area
 	*/
 	getItemsInArea(area) {
-		// TODO
 		const start		= this.timeContext.parent.timeToPixel(this.timeContext.start);
 		const duration = this.timeContext.timeToPixel(this.timeContext.duration);
 		const offset	 = this.timeContext.timeToPixel(this.timeContext.offset);
@@ -270,15 +277,9 @@ class Layer extends events.EventEmitter {
 		this.updateShapes();
 		this.updateContainer();
 
-		this.Ls.forEach((contentLayer) => {
-			contentLayer.batchDraw()
-		});
-
-
-		this._commonShapeLayer.batchDraw();
-		this._commonShapeLayer.moveToBottom();
-		this._contextLayer.batchDraw();
-		this._contextLayer.moveToBottom();
+		this.track.$stage.find('.content-layer').forEach((layer) => layer.draw());
+		this.track.$stage.find('.context-layer').forEach((layer) => layer.draw());
+		this._commonShapeLayer.draw();
 	}
 
 
@@ -301,45 +302,49 @@ class Layer extends events.EventEmitter {
 
 		var interval = this.visible_data(this.timeContext, this.data);
 
-		for (var i=interval[0]; i <= interval[1] && i < this.data.length; i++) {
+		for (var i=interval[0]; i <= interval[1]; i++) {
 			const $datum = this.data[i];
 
 			const $shape = this._$datumToShape.get($datum);
 
 			$shape.update(this._renderingContext, $datum);
-
-			if ($shape.$el instanceof Array) {
-				var contentLayer = this.Ls.values().next().value;
-				for (var i=0; i<$shape.$el.length; i++)
-					contentLayer.add($shape.$el[i]);
-			} else {
-				var contentLayer = this.Ls.values().next().value;
-				contentLayer.add($shape.$el);
-			}
-
-			
+			// $shape.draw();
 		}
 
-		if (this._commonShape) {
-			this._commonShape.update(this._renderingContext, data.slice(interval[0], interval[1]+1));
-		}
+		if (this._commonShape)
+			this._commonShape.update(this._renderingContext, data);
 	}
 
 	updateContainer() {
 		this._updateRenderingContext();
 
-		this.Ls.forEach((contentLayer) => {
-			contentLayer
-				.offsetX(-this._renderingContext.startX)
-				.x(this._renderingContext.offsetX)
-				.clip({x:-this._renderingContext.offsetX, y:0, width: this._renderingContext.width, height: this._renderingContext.height})
-		});
+		const timeContext = this.timeContext;
+		const width  = timeContext.timeToPixel(timeContext.duration);
+		// x is relative to timeline's timeContext
+		const x      = timeContext.parent.timeToPixel(timeContext.start);
+		const offset = timeContext.timeToPixel(timeContext.offset);
+		const top    = this.params.top;
+		const height = this.params.height;
 
-		this._commonShapeLayer
-				.offsetX(-this._renderingContext.startX)
-				.x(this._renderingContext.offsetX)
-				.clip({x:-this._renderingContext.offsetX, y:0, width: this._renderingContext.width, height: this._renderingContext.height})
-				
+		const stage = this.track.$stage;
+
+
+
+		this.track.$stage.find('.content-layer').forEach((layer) => {
+			layer.x(this.timeContext.parent.timeToPixel(this.timeContext.start))
+				.offsetX(offset)
+				.clip({x:offset, y:0, width: width, height: this.params.height});
+		});
+		this.track.$stage.find('.context-layer').forEach((layer) => {
+			layer.x(this.timeContext.parent.timeToPixel(this.timeContext.start))
+				.offsetX(offset)
+				.clip({x:offset, y:0, width: width, height: this.params.height});
+		});
+		this._commonShapeLayer.x(this.timeContext.parent.timeToPixel(this.timeContext.start))
+								.offsetX(offset)
+								.clip({x:offset, y:0, width: width, height: this.params.height});
+		
+
 		this._contextShape.update(this._renderingContext, this.timeContext, 0);
 	}
 
@@ -373,25 +378,29 @@ class Layer extends events.EventEmitter {
 				var entry = it.next();
 				if (entry.done)	return;
 				var el = entry.value[1];
-				// contentLayers[i].add(el);
+				contentLayers[i].add(el);
 			}
 		}
 		var entry = it.next();
 		const that = this;
 		while (!entry.done) {
-			const L = new Konva.Layer({});
+			const L = new Konva.FastLayer({});
 			L.layer = this;
 			L.addName('content-layer');
-			this.Ls.add(L);
 			var el = entry.value[1];
-			// L.add(el);
+			L.on('mousedown', (o) => stage.fire('event', that.createEventObj(o, L, 'mousedown')));
+			L.on('mousemove', (o) => stage.fire('event', that.createEventObj(o, L, 'mousemove')));
+			L.on('mouseup', (o) => stage.fire('event', that.createEventObj(o, L, 'mouseup')));
+			L.on('mouseover', (o) => stage.fire('event', that.createEventObj(o, L, 'mouseover')));
+			L.on('mouseout', (o) => stage.fire('event', that.createEventObj(o, L, 'mouseout')));
+			L.on('dblclick', (o) => stage.fire('event', that.createEventObj(o, L, 'dblclick')));
+			L.add(el);
 			stage.add(L);
 			entry = it.next();
 		}
 	}
 
 	set(data) {
-		// TODO: take care of the common shape
 		const that = this;
 
 		this.data.forEach((datum) => {
@@ -429,7 +438,6 @@ class Layer extends events.EventEmitter {
 	}
 
 	remove(datum) {
-		// TODO: take care of the common shape
 		const shape = this._$datumToShape.get(datum);
 		if (shape) {
 			shape.layer = null;

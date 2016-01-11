@@ -198,4 +198,6 @@ class TimelineTimeContext {
     this.offset = -value.start;
     this.pixelsPerSecond = this.visibleWidth / value.duration;
   }
+
+
 }

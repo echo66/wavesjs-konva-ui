@@ -13,6 +13,7 @@ class LayerTimeContext {
      * @type {TimelineTimeContext}
      */
     this.parent = parent;
+    this._lockedToParentInterval = false;
 
     this._timeToPixel = null;
     this._start = 0;
@@ -46,7 +47,7 @@ class LayerTimeContext {
    * @type {Number}
    */
   get start() {
-    return this._start;
+    return (!this._lockedToParentInterval)? this._start : -this.parent.offset;
   }
 
   /**
@@ -64,7 +65,7 @@ class LayerTimeContext {
    * @type {Number}
    */
   get duration() {
-    return this._duration;
+    return (!this._lockedToParentInterval)? this._duration : this.parent.visibleDuration;
   }
 
   /**
@@ -82,7 +83,7 @@ class LayerTimeContext {
    * @type {Number}
    */
   get offset() {
-    return this._offset;
+    return (!this._lockedToParentInterval)? this._offset : this.parent.offset;
   }
 
   /**
@@ -151,5 +152,39 @@ class LayerTimeContext {
     }
 
     return this._timeToPixel.invert(px);
+  }
+
+
+  /**
+   * Returns the time interval of the visible area in the timeline.
+   *
+   * @type {Object} 
+   */
+  get visibleInterval() {
+    var interval = {};
+    interval.start = -this.offset;
+    interval.duration = this.duration;
+    return interval;
+  }
+
+  /**
+   * Focus the timeline visible area in the provided time interval.
+   *
+   * @type {Object} 
+   */
+  set visibleInterval(value) {
+    this.offset = -value.start;
+    this.duration = value.duration;
+  }
+
+  /**
+   *  TODO
+   */
+  get lockedToParentInterval() {
+    return this._lockedToParentInterval;
+  }
+
+  set lockedToParentInterval(value) {
+    this._lockedToParentInterval = value;
   }
 }

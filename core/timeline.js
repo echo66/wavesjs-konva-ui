@@ -25,7 +25,7 @@ class Timeline extends events.EventEmitter {
     // default interactions
     this._surfaceCtor = Surface;
 
-    if (registerKeyboard) {
+    if (opts.registerKeyboard) {
       this.createInteraction(Keyboard, document);
     }
 
@@ -97,10 +97,7 @@ class Timeline extends events.EventEmitter {
    * @type {Object} 
    */
   get visibleInterval() {
-    var interval = {};
-    interval.start = -this.offset;
-    interval.duration = this.visibleDuration;
-    return interval;
+    return this.timeContext.visibleInterval;
   }
 
   /**
@@ -109,8 +106,7 @@ class Timeline extends events.EventEmitter {
    * @type {Object} 
    */
   set visibleInterval(value) {
-    this.offset = -value.start;
-    this.pixelsPerSecond = this.visibleWidth / value.duration;
+    this.timeContext.visibleInterval = value;
   }
 
   /**
@@ -201,7 +197,9 @@ class Timeline extends events.EventEmitter {
    * @param {Element} $el - The DOM element which will be binded to the `EventSource` module.
    * @param {Object} [options={}] - Options to be applied to the `ctor`.
    */
-  createInteraction(ctor, $el, options = {}) {
+  createInteraction(ctor, $el, options) {
+    if (options == undefined) 
+      options = {}
     const interaction = new ctor($el, options);
     interaction.on('event', (e) => this._handleEvent(e));
   }
@@ -213,21 +211,19 @@ class Timeline extends events.EventEmitter {
    * @return {Array} - Matched layers
    */
   getHitLayers(e) {
-    // TODO
-    const clientX = e.originalEvent.clientX;
-    const clientY = e.originalEvent.clientY;
+    const x = e.originalEvent.offsetX;
+    const y = e.originalEvent.offsetY;
+
     let layers = [];
 
     this.layers.forEach((layer) => {
-      if (!layer.params.hittable) { return; }
-      const br = layer.$el.getBoundingClientRect();
+      const ctxX = layer._contextShape.$segment.getAbsolutePosition().x;
+      const ctxY = layer._contextShape.$segment.getAbsolutePosition().y;
+      const ctxW = layer._contextShape.$segment.width();
+      const ctxH = layer._contextShape.$segment.height();
 
-      if (
-        clientX > br.left && clientX < br.right &&
-        clientY > br.top && clientY < br.bottom
-      ) {
+      if (x >= ctxX && x <= ctxX + ctxW && y >= ctxY && y <= ctxY + ctxH)
         layers.push(layer);
-      }
     });
 
     return layers;
@@ -294,7 +290,10 @@ class Timeline extends events.EventEmitter {
    *    the track, this id only exists in timeline's context and should be used
    *    in conjonction with `addLayer` method.
    */
-  add(track, trackId = null) {
+  add(track, trackId) {
+    if (trackId == undefined)
+      trackId = null;
+
     if (this.tracks.indexOf(track) !== -1) {
       throw new Error('track already added to the timeline');
     }
@@ -303,7 +302,7 @@ class Timeline extends events.EventEmitter {
     track.configure(this.timeContext);
 
     this.tracks.push(track);
-    this.createInteraction(this._surfaceCtor, track.$el);
+    this.createInteraction(this._surfaceCtor, track);
   }
 
   /**
@@ -313,7 +312,12 @@ class Timeline extends events.EventEmitter {
    * @todo not implemented.
    */
   remove(track) {
-    // should destroy interaction too, avoid ghost eventListeners
+    const index = this.tracks.indexOf(track);
+    if (this.tracks.indexOf(track) !== -1) {
+      track.destroy();
+      delete this._trackById[track.id];
+    }
+    // TODO: should destroy interaction too, avoid ghost eventListeners
   }
 
   /**
@@ -327,7 +331,12 @@ class Timeline extends events.EventEmitter {
    *    conjonction with `addLayer` method.
    * @return {Track}
    */
-  createTrack($el, trackHeight = 100, trackId = null) {
+  createTrack($el, trackHeight, trackId) {
+    if (trackHeight == undefined)
+      trackHeight = 100;
+    if (trackId == undefined)
+      trackId = null;
+
     const track = new Track($el, trackHeight);
     // Add track to the timeline
     this.add(track, trackId);
@@ -345,7 +354,7 @@ class Timeline extends events.EventEmitter {
       if (this._trackById[trackId] !== undefined) {
         throw new Error(`trackId: "${trackId}" is already used`);
       }
-
+      track.id = trackId;
       this._trackById[trackId] = track;
     }
   }
@@ -364,7 +373,13 @@ class Timeline extends events.EventEmitter {
    *    instance of `AxisLayer` (these layers shares the `TimlineTimeContext` instance
    *    of the timeline).
    */
-  addLayer(layer, trackOrTrackId, groupId = 'default', isAxis = false) {
+  addLayer(layer, trackOrTrackId, groupId, isAxis) {
+
+    if (groupId == undefined)
+      groupId = 'default';
+    if (isAxis == undefined)
+      isAxis = false;
+
     let track = trackOrTrackId;
 
     if (typeof trackOrTrackId === 'string') {
@@ -434,6 +449,7 @@ class Timeline extends events.EventEmitter {
    * @return {Track}
    */
   getTrackFromDOMElement($el) {
+    throw new Error('deprecated')
     let $svg = null;
     let track = null;
     // find the closest `.track` element

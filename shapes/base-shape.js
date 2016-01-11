@@ -147,6 +147,18 @@ class BaseShape {
   update(renderingContext, datum) {}
 
   /**
+   *
+   */
+  draw() {
+    if (this.$el instanceof Array) {
+      for (var i=0; i<this.$el.length; i++) 
+        this.$el[i].draw();
+    } else {
+      this.$el.draw();
+    }
+  }
+
+  /**
    * Interface method to override called by `Layer~getItemsInArea`. Defines if
    * the shape is considered to be the given area. Arguments are passed in pixel domain.
    *

@@ -10,7 +10,7 @@ class Line extends BaseShape {
   getClassName() { return 'line'; }
 
   _getAccessorList() {
-    return { cx: 0, cy: 0 };
+    return { x: 0, y: 0 };
   }
 
   _getDefaults() {
@@ -29,7 +29,7 @@ class Line extends BaseShape {
   update(renderingContext, data) {
 
     data = data.slice(0);
-    data.sort((a, b) => this.cx(a) < this.cx(b) ? -1 : 1);
+    data.sort((a, b) => this.x(a) < this.x(b) ? -1 : 1);
 
     this.$el.data(this._buildLine(renderingContext, data));
     this.$el.stroke(this.params.color);
@@ -44,8 +44,8 @@ class Line extends BaseShape {
     if (!data.length) { return ''; }
     // sort data
     let instructions = data.map((datum, index) => {
-      const x = renderingContext.timeToPixel(this.cx(datum));
-      const y = renderingContext.valueToPixel(this.cy(datum)) - 0.5;
+      const x = renderingContext.timeToPixel(this.x(datum));
+      const y = renderingContext.valueToPixel(this.y(datum)) - 0.5;
       return `${x},${y}`;
     });
 

@@ -25,8 +25,10 @@ class Track extends events.EventEmitter {
     this.$el = $el;
 
     this.$stage = null;
+
+    this.$dragLayer = null;
     
-    this.$interactions = null;
+    this.$interactionsLayer = null;
 
     /**
      * An array of all the layers belonging to the track.
@@ -90,13 +92,13 @@ class Track extends events.EventEmitter {
     this.layers.forEach((layer) => layer.destroy());
 
     this.$stage.destroy();
-    this.$interactions.destroy();
+    this.$interactionsLayer.destroy();
 
     this._height = null;
     this._width  = null;
     this.$el = null;
     this.$stage = null;
-    this.$interactions = null;
+    this.$interactionsLayer = null;
     this.layers.length = 0;
     this.renderingContext = null;
   }
@@ -112,10 +114,14 @@ class Track extends events.EventEmitter {
     });
     this.$stage.addName('track-stage');
 
-    this.$interactions = new Konva.Layer({});
-    this.$interactions.addName('track-interactions');
+    this.$interactionsLayer = new Konva.Layer({});
+    this.$interactionsLayer.addName('track-interactions');
 
-    this.$stage.add(this.$interactions);
+    this.$dragLayer = new Konva.Layer({});
+    this.$dragLayer.addName('track-drag-layer');
+
+    this.$stage.add(this.$dragLayer);
+    this.$stage.add(this.$interactionsLayer);
   }
 
   /**
@@ -185,7 +191,7 @@ class Track extends events.EventEmitter {
     const renderingContext = this.renderingContext;
     const height = this.height;
     const width = Math.round(renderingContext.visibleWidth);
-    const offsetX = Math.round(renderingContext.timeToPixel(renderingContext.offset));
+    const offsetX = -Math.round(renderingContext.timeToPixel(renderingContext.offset));
 
     this.$stage.width(this.width).height(this.height).offsetX(offsetX);
   }

@@ -11,7 +11,7 @@ class Dot extends BaseShape {
 
   // @TODO rename : confusion between accessors and meta-accessors
   _getAccessorList() {
-    return { cx: 0, cy: 0, r: 3, color: '#000000'};
+    return { x: 0, y: 0, r: 3, color: '#000000'};
   }
 
   render() {
@@ -27,13 +27,13 @@ class Dot extends BaseShape {
   update(renderingContext, datum) {
     const d = datum || this.datum;
 
-    const cx = renderingContext.timeToPixel(this.cx(d));
-    const cy = renderingContext.valueToPixel(this.cy(d));
+    const x = renderingContext.timeToPixel(this.x(d));
+    const y = renderingContext.valueToPixel(this.y(d));
     const r  = this.r(d);
     const color = this.color(d);
     
-    this.$el.x(cx);
-    this.$el.y(cy);
+    this.$el.x(x);
+    this.$el.y(y);
     this.$el.radius(r);
     this.$el.fill(color);
   }
@@ -41,10 +41,10 @@ class Dot extends BaseShape {
   // x1, x2, y1, y2 => in pixel domain
   inArea(renderingContext, datum, x1, y1, x2, y2) {
     const d = datum || this.datum;
-    const cx = renderingContext.timeToPixel(this.cx(d));
-    const cy = renderingContext.valueToPixel(this.cy(d));
+    const x = renderingContext.timeToPixel(this.x(d));
+    const y = renderingContext.valueToPixel(this.y(d));
 
-    if ((cx > x1 && cx < x2) && (cy > y1 && cy < y2)) {
+    if ((x > x1 && x < x2) && (y > y1 && y < y2)) {
       return true;
     }
 

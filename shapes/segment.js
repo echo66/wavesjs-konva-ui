@@ -39,8 +39,8 @@ class Segment extends BaseShape {
 
 		this.$segment = new Konva.Rect({});
 		this.$segment.name('segment');
-		this.$segment.on('mouseover', function(e) { console.log(e); document.body.style.cursor = 'pointer'; });
-		this.$segment.on('mouseout', function(e) { document.body.style.cursor = 'default'; });
+		// this.$segment.on('mouseover', function(e) { document.body.style.cursor = 'pointer'; });
+		// this.$segment.on('mouseout', function(e) { document.body.style.cursor = 'default'; });
 		this.$segment.opacity(this.params.opacity);
 		this.$segment.shape = this;
 
@@ -51,8 +51,8 @@ class Segment extends BaseShape {
 		this.$leftHandler.addName('handler');
 		this.$leftHandler.width(this.params.handlerWidth);
 		this.$leftHandler.opacity(this.params.handlerOpacity);
-		this.$leftHandler.on('mouseover', function() { document.body.style.cursor = 'ew-resize'; });
-		this.$leftHandler.on('mouseout', function() { document.body.style.cursor = 'default'; });
+		// this.$leftHandler.on('mouseover', function() { document.body.style.cursor = 'ew-resize'; });
+		// this.$leftHandler.on('mouseout', function() { document.body.style.cursor = 'default'; });
 		this.$leftHandler.shape = this;
 
 		this.$rightHandler = new Konva.Rect({});
@@ -60,8 +60,8 @@ class Segment extends BaseShape {
 		this.$rightHandler.addName('handler');
 		this.$rightHandler.width(this.params.handlerWidth);
 		this.$rightHandler.opacity(this.params.handlerOpacity);
-		this.$rightHandler.on('mouseover', function() { document.body.style.cursor = 'ew-resize'; });
-		this.$rightHandler.on('mouseout', function() { document.body.style.cursor = 'default'; });
+		// this.$rightHandler.on('mouseover', function() { document.body.style.cursor = 'ew-resize'; });
+		// this.$rightHandler.on('mouseout', function() { document.body.style.cursor = 'default'; });
 		this.$rightHandler.shape = this;
 
 		this.$el.push(this.$leftHandler);
