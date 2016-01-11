@@ -20,7 +20,7 @@
  */
 class BaseBehavior {
   constructor() {
-    this._selectedItems = new Set(); // no duplicate in Set
+    this._selectedDatums = new Set(); // no duplicate in Set
     this._selectedClass = null;
     this._layer = null;
   }
@@ -31,13 +31,13 @@ class BaseBehavior {
   }
 
   /**
-   * Destroy the references to the selected items.
+   * Destroy the references to the selected datums.
    *
    * @type {String}
    * @todo - rename to `clearSelection` (removing the class) ?
    */
   destroy() {
-    this._selectedItems.clear();
+    this._selectedDatums.clear();
   }
 
   /**
@@ -59,45 +59,39 @@ class BaseBehavior {
   }
 
   /**
-   * An array containing all the selected items of the layer.
+   * An array containing all the selected datums of the layer.
    *
    * @type {Array}
    */
-  get selectedItems() {
-    return [...this._selectedItems];
+  get selectedDatums() {
+    return this._selectedDatums;
   }
 
   /**
-   * @param {Element} $item - The item to select.
-   * @param {Object} datum - Not used in this implementation. Could be
-   *    used to mark the data as selected.
+   * @param {Object} datum - The datum to select.
    * @todo - Pass the shape object to get the accessors ?
    */
-  select($item, datum) {
-    $item.classList.add(this.selectedClass);
-    this._selectedItems.add($item);
+  select(shape, datum) {
+    // $item.classList.add(this.selectedClass);
+    this._selectedDatums.add(datum);
   }
 
   /**
-   * @param {Element} $item - The item to unselect.
-   * @param {Object} datum - Not used in this implementation. Could be
-   *    used to mark the data as selected.
+   * @param {Object} datum - The datum to unselect.
    * @todo - Pass the shape object to get the accessors ?
    */
-  unselect($item, datum) {
-    $item.classList.remove(this.selectedClass);
-    this._selectedItems.delete($item);
+  unselect(shape, datum) {
+    // $item.classList.remove(this.selectedClass);
+    this._selectedDatums.delete(datum);
   }
 
   /**
-   * @param {Element} $item - The item to toggle selection.
-   * @param {Object} datum - Not used in this implementation. Could be
-   *    used to mark the data as selected.
+   * @param {Object} datum - The datum to toggle selection.
    * @todo - Pass the shape object to get the accessors ?
    */
-  toggleSelection($item, datum) {
-    const method = this._selectedItems.has($item) ? 'unselect' : 'select';
-    this[method]($item);
+  toggleSelection(shape, datum) {
+    const method = this._selectedDatums.has(datum) ? 'unselect' : 'select';
+    this[method](shape, datum);
   }
 
   /**
@@ -118,10 +112,6 @@ class BaseBehavior {
   /**
    * TODO
    */
-  highlight(datum, isHighlighted) { }
+  highlight(shape, datum, isHighlighted) { }
 
-  /**
-   * TODO
-   */
-  handleEvent(event) {}
 }

@@ -30,6 +30,8 @@ class Track extends events.EventEmitter {
     
     this.$interactionsLayer = null;
 
+    this.$backgroundLayer = null;
+
     /**
      * An array of all the layers belonging to the track.
      * @type {Array<Layer>}
@@ -93,12 +95,14 @@ class Track extends events.EventEmitter {
 
     this.$stage.destroy();
     this.$interactionsLayer.destroy();
+    this.$backgroundLayer.destroy();
 
     this._height = null;
     this._width  = null;
     this.$el = null;
     this.$stage = null;
     this.$interactionsLayer = null;
+    this.$backgroundLayer = null;
     this.layers.length = 0;
     this.renderingContext = null;
   }
@@ -117,11 +121,17 @@ class Track extends events.EventEmitter {
     this.$interactionsLayer = new Konva.Layer({});
     this.$interactionsLayer.addName('track-interactions');
 
+    this.$backgroundLayer = new Konva.Layer({});
+    this.$backgroundLayer.addName('track-background');
+    this.$backgroundLayer.add(new Konva.Rect({}));
+    this.$backgroundLayer.children[0].shape = { layer: { track: this } }; // Shame!!! ..... Shame!!! .... Shame!!!
+
     this.$dragLayer = new Konva.Layer({});
     this.$dragLayer.addName('track-drag-layer');
 
     this.$stage.add(this.$dragLayer);
     this.$stage.add(this.$interactionsLayer);
+    this.$stage.add(this.$backgroundLayer);
   }
 
   /**
@@ -194,6 +204,11 @@ class Track extends events.EventEmitter {
     const offsetX = -Math.round(renderingContext.timeToPixel(renderingContext.offset));
 
     this.$stage.width(this.width).height(this.height).offsetX(offsetX);
+    this.$interactionsLayer.offsetX(-offsetX);
+    this.$backgroundLayer.offsetX(-offsetX);
+    this.$backgroundLayer.children[0].x(0).y(0).width(this.width).height(this.height).opacity(0).moveToBottom();
+    this.$backgroundLayer.batchDraw();
+    this.$backgroundLayer.moveToBottom();
   }
 
   /**
@@ -211,6 +226,11 @@ class Track extends events.EventEmitter {
       if (this.layers.indexOf(layer) === -1) { return; }
       layer.update();
     });
+    this.$backgroundLayer.moveToBottom();
+  }
+
+  minimize() {
+    // TODO
   }
 
 

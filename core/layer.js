@@ -22,7 +22,6 @@ class Layer extends events.EventEmitter {
 				color: '#787878',
 			}, 
 			hittable: true, // when false the layer is not returned by `BaseState.getHitLayers`
-			id: '', // used ?
 		};
 
 		this._behavior = null;
@@ -62,13 +61,13 @@ class Layer extends events.EventEmitter {
 		this.setContextEditable(this._isContextEditable);
 		this._contextShape = new Segment({});
 		this._contextShape.install({
-			opacity	: () => this.params.context.opacity, 
+			opacity	: () => 1, 
 			color	: () => this.params.context.color, 
 			width	: () => this.timeContext.duration,
 			height	: () => this._renderingContext.valueToPixel.domain()[1],
 			y		: () => this._renderingContext.valueToPixel.domain()[0],
 			x		: () => this.timeContext.start
-		}); // TODO
+		}); 
 		this._contextShape.render(this._renderingContext);
 		this._contextShape.layer = this;
 		for (var i=0; i<this._contextShape.$el.length; i++) {
@@ -115,6 +114,234 @@ class Layer extends events.EventEmitter {
 		this._isContextEditable = null;
 		this._behavior = null;
 	}
+
+
+
+	/**
+	 * Allows to override default the `TimeContextBehavior` used to edit the layer.
+	 *
+	 * @param {Object} ctor
+	 */
+	static configureTimeContextBehavior(ctor) {
+		timeContextBehaviorCtor = ctor;
+	}
+
+	/**
+	 * Returns `LayerTimeContext`'s `start` time domain value.
+	 *
+	 * @type {Number}
+	 */
+	get start() {
+		return this.timeContext.start;
+	}
+
+	/**
+	 * Sets `LayerTimeContext`'s `start` time domain value.
+	 *
+	 * @type {Number}
+	 */
+	set start(value) {
+		this.timeContext.start = value;
+	}
+
+	/**
+	 * Returns `LayerTimeContext`'s `offset` time domain value.
+	 *
+	 * @type {Number}
+	 */
+	get offset() {
+		return this.timeContext.offset;
+	}
+
+	/**
+	 * Sets `LayerTimeContext`'s `offset` time domain value.
+	 *
+	 * @type {Number}
+	 */
+	set offset(value) {
+		this.timeContext.offset = value;
+	}
+
+	/**
+	 * Returns `LayerTimeContext`'s `duration` time domain value.
+	 *
+	 * @type {Number}
+	 */
+	get duration() {
+		return this.timeContext.duration;
+	}
+
+	/**
+	 * Sets `LayerTimeContext`'s `duration` time domain value.
+	 *
+	 * @type {Number}
+	 */
+	set duration(value) {
+		this.timeContext.duration = value;
+	}
+
+	/**
+	 * Returns `LayerTimeContext`'s `stretchRatio` time domain value.
+	 *
+	 * @type {Number}
+	 */
+	get stretchRatio() {
+		return this.timeContext.stretchRatio;
+	}
+
+	/**
+	 * Sets `LayerTimeContext`'s `stretchRatio` time domain value.
+	 *
+	 * @type {Number}
+	 */
+	set stretchRatio(value) {
+		this.timeContext.stretchRatio = value;
+	}
+
+	/**
+	 * Set the domain boundaries of the data for the y axis.
+	 *
+	 * @type {Array}
+	 */
+	set yDomain(domain) {
+		this.params.yDomain = domain;
+		this._valueToPixel.domain(domain);
+	}
+
+	/**
+	 * Returns the domain boundaries of the data for the y axis.
+	 *
+	 * @type {Array}
+	 */
+	get yDomain() {
+		return this.params.yDomain;
+	}
+
+	/**
+	 * Sets the opacity of the whole layer.
+	 *
+	 * @type {Number}
+	 */
+	set opacity(value) {
+		this.params.opacity = value;
+	}
+
+	/**
+	 * Returns the opacity of the whole layer.
+	 *
+	 * @type {Number}
+	 */
+	get opacity() {
+		return this.params.opacity;
+	}
+
+	/**
+	 * Returns the transfert function used to display the data in the x axis.
+	 *
+	 * @type {Number}
+	 */
+	get timeToPixel() {
+		return this.timeContext.timeToPixel;
+	}
+
+	/**
+	 * Returns the transfert function used to display the data in the y axis.
+	 *
+	 * @type {Number}
+	 */
+	get valueToPixel() {
+		return this._valueToPixel;
+	}
+
+
+
+
+
+
+
+	/**
+	 * Register the behavior to use when interacting with a shape.
+	 *
+	 * @param {BaseBehavior} behavior
+	 */
+	setBehavior(behavior) {
+		behavior.initialize(this);
+		this._behavior = behavior;
+	}
+
+	/******************************************************************/
+	/******************************************************************/
+	/******************************************************************/
+	/************************** SELECTION *****************************/
+	/******************************************************************/
+	/******************************************************************/
+	/******************************************************************/
+
+	
+	get selectedDatums() {
+		return this._behavior ? this._behavior.selectedDatums : [];
+	}
+
+
+	select($datums) {
+		if ($datums == undefined || $datums.length == undefined) 
+			$datums = this.data;
+
+		const that = this;
+		$datums.forEach((datum) => {
+			const shape = that._$datumToShape.get(datum)
+			if (shape) {
+				this._behavior.select(shape, datum);
+				this._toFront(datum);
+			}
+		});
+	}
+
+	unselect($datums) {
+		if ($datums == undefined || $datums.length == undefined) 
+			$datums = this.data;
+		
+		const that = this;
+		$datums.forEach((datum) => {
+			const shape = that._$datumToShape.get(datum)
+			if (shape) {
+				this._behavior.unselect(shape, datum);
+			}
+		});
+	}
+
+	_toFront($datum) {
+		const $shape = this._$datumToShape.get($datum);
+		if ($shape) {
+			if ($shape.$el instanceof Array) {
+				$shape.$el.forEach((el) => el.moveToTop());
+			} else {
+				$shape.$el.moveToTop();
+			}
+		}
+	}
+
+
+	
+	toggleSelection($datums) {
+		console.log($datums[0]);
+		const that = this;
+		$datums.forEach((datum) => {
+			const shape = that._$datumToShape.get(datum)
+			if (shape) {
+				this._behavior.toggleSelection(shape, datum);
+			}
+		});
+	}
+
+	/******************************************************************/
+	/******************************************************************/
+	/******************************************************************/
+	/******************************************************************/
+	/******************************************************************/
+	/******************************************************************/
+	/******************************************************************/
+
 	
 	/**
 	 * Sets the context of the layer, thus defining its `start`, `duration`,
@@ -170,8 +397,8 @@ class Layer extends events.EventEmitter {
 		if (editable == undefined)
 			editable = true;
 		// this._contextLayer.visible(editable);
-		this._contextLayer.opacity((editable)? 1 : 0);
-		this._contextLayer.listening(editable);
+		this._contextLayer.opacity((editable)? this.params.context.opacity : 0);
+		this._contextLayer.listening(true);
 		this._isContextEditable = editable;
 	}
 	
@@ -206,65 +433,57 @@ class Layer extends events.EventEmitter {
 	// --------------------------------------
 
 	getDatumFromShape($shape) {
-		return this._$datumToShape.get($shape);
+		return this._$shapeToDatum.get($shape);
 	}
 
 	getShapeFromDatum($datum) {
-		return this._$shapeToDatum.get($datum);
+		return this._$datumToShape.get($datum);
 	}
 
 	/**
-	* Retrieve all the items in a given area as defined in the registered `Shape~inArea` method.
+	* Retrieve all the datums in a given area as defined in the registered `Shape~inArea` method.
 	*
 	* @param {Object} area - The area in which to find the elements
 	* @param {Number} area.top
 	* @param {Number} area.left
 	* @param {Number} area.width
 	* @param {Number} area.height
-	* @return {Array} - list of the items presents in the area
+	* @return {Array} - list of the datums presents in the area
 	*/
-	getItemsInArea(area) {
-		// TODO
-		const start		= this.timeContext.parent.timeToPixel(this.timeContext.start);
-		const duration = this.timeContext.timeToPixel(this.timeContext.duration);
-		const offset	 = this.timeContext.timeToPixel(this.timeContext.offset);
-		const top			= this.params.top;
-		// be aware af context's translations - constrain in working view
-		let x1 = Math.max(area.left, start);
-		let x2 = Math.min(area.left + area.width, start + duration);
-		x1 -= (start + offset);
-		x2 -= (start + offset);
-		// keep consistent with context y coordinates system
-		let y1 = this.params.height - (area.top + area.height);
-		let y2 = this.params.height - area.top;
+	getDatumsInArea(area) {
+		
+		let x1 = area.left;
+		let y1 = area.top;
+		let x2 = area.left + area.width;
+		let y2 = area.top + area.height;
 
-		y1 += this.params.top;
-		y2 += this.params.top;
-
-		const $filteredItems = [];
+		const $filteredDatums = [];
 
 		const $entries = this._$datumToShape.entries();
 
-		for (var i=0; i < $this._$datumToShape.size; i++) {
-			var entry = $entries.next();
 
-			if (entry.done)	break;
+		const that = this;
 
-			var $datum = entry.value[0];
-			var $shape = entry.value[1];
+		this.Ls.forEach((contentLayer) => {
+			contentLayer.children.forEach((konvaShape) => {
+				const $shape = konvaShape.shape;
+				const $datum = that.getDatumFromShape($shape);
+				const inArea = $shape.inArea(this._renderingContext, $datum, x1, y1, x2, y2);
 
-			const inArea = $shape.inArea(this._renderingContext, $datum, x1, y1, x2, y2);
-
-			if (inArea) { $filteredItems.push($item); }
-		}
-
-		return $filteredItems;
+				if (inArea) { 
+					$filteredDatums.push($datum);
+				}
+			});
+		})
+		
+		return $filteredDatums;
 	}
 
 
 
 
 	update() {
+
 		this.track.$stage.clear();
 
 		this.updateShapes();
@@ -345,23 +564,6 @@ class Layer extends events.EventEmitter {
 
 
 
-
-	select(datum) {
-		const shape = this.$dataToShape.get(datum);
-		if (shape) {
-			shape.highlight = true;
-		}
-		// TODO: use Behavior
-	}
-
-	unselect(datum) {
-		const shape = this.$dataToShape.get(datum);
-		if (shape) {
-			shape.highlight = false;
-		}
-		// TODO: use Behavior
-	}
-
 	_shapeElementsStageAllocation(stage, shape) {
 		// TODO: remove empty layers
 		const LIMIT = Infinity;
@@ -429,7 +631,6 @@ class Layer extends events.EventEmitter {
 	}
 
 	remove(datum) {
-		// TODO: take care of the common shape
 		const shape = this._$datumToShape.get(datum);
 		if (shape) {
 			shape.layer = null;
@@ -448,8 +649,35 @@ class Layer extends events.EventEmitter {
 		this.data.splice(this.data.indexOf(datum), 1);
 	}
 
-	edit($item, dx, dy, $target) {
-		throw new Error("deprecated");
+
+
+	/******************************************************************/
+	/******************************************************************/
+	/******************************************************************/
+	/*************************** EDITION ******************************/
+	/******************************************************************/
+	/******************************************************************/
+	/******************************************************************/
+
+
+	/**
+	 * Edit datum(s) according to the `edit` defined in the registered `Behavior`.
+	 *
+	 * @param {Object[]} $datums - The datum(s) to edit.
+	 * @param {Number} dx - The modification to apply in the x axis (in pixels).
+	 * @param {Number} dy - The modification to apply in the y axis (in pixels).
+	 * @param {Element} $target - The target of the interaction (for example, left
+	 *    handler DOM element in a segment).
+	 */
+	edit($datums, dx, dy, $target) {
+		const that = this;
+		$datums.forEach((datum) => {
+			const shape = that._$datumToShape.get(datum);
+
+			this._behavior.edit(this._renderingContext, shape, datum, dx, dy, $target);
+
+			this.emit('edit', shape, datum);
+		});
 	}
 
 
@@ -475,6 +703,10 @@ class Layer extends events.EventEmitter {
 	stretchContext(dx, dy, $target) {
 		// TODO
 		this.timeContextBehavior.stretch(this, dx, dy, $target);
+	}
+
+	minimize() {
+		// TODO
 	}
 
 }

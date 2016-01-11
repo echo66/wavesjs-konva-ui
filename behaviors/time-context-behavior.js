@@ -8,7 +8,7 @@
 class TimeContextBehavior extends BaseBehavior {
 	edit(layer, dx, dy, target) {
 		const timeContext = layer.timeContext;
-
+		// TODO: update this class to the Konva version
 		if (target.classList.contains('handler') && target.classList.contains('left')) {
 			this._editLeft(timeContext, dx);
 		} else if (target.classList.contains('handler') && target.classList.contains('right')) {

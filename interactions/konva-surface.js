@@ -85,12 +85,14 @@ class Surface extends EventSource {
       window.addEventListener('mousemove', onMouseDrag, false);
       window.addEventListener('mouseup', onMouseUp, false);
 
+      // event.cancelBubble = true;
+
       this.emit('event', event);
     };
 
     const onMouseDrag = (e) => {
 
-      let event = this._createEvent('mousedrag', e);
+      let event = this._createEvent('mousemove', e);
       this._defineArea(event, this._mouseDownEvent, this._lastEvent);
       // Update `lastEvent` for next call
       this._lastEvent = event;
@@ -133,8 +135,13 @@ class Surface extends EventSource {
       this.emit('event', event);
     };
 
+    const onMouseDownTimeline = (e) => {
+      let event = this._createEvent('mousedown', e);
+      this.emit('event', event);
+    }
+
     // Bind callbacks
-    this.$el.$stage.on('contentClick', onMouseDown);
+    // this.$el.$stage.on('contentMousedown', onMouseDownTimeline);
     this.$el.$stage.on('mousedown', onMouseDown);
     this.$el.$stage.on('click', onClick);
     this.$el.$stage.on('dblclick', onDblClick);

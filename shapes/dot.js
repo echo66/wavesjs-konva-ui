@@ -40,11 +40,10 @@ class Dot extends BaseShape {
 
   // x1, x2, y1, y2 => in pixel domain
   inArea(renderingContext, datum, x1, y1, x2, y2) {
-    const d = datum || this.datum;
-    const x = renderingContext.timeToPixel(this.x(d));
-    const y = renderingContext.valueToPixel(this.y(d));
+    const x = this.$el.getAbsolutePosition().x;
+    const y = this.$el.getAbsolutePosition().y;
 
-    if ((x > x1 && x < x2) && (y > y1 && y < y2)) {
+    if ((x >= x1 && x <= x2) && (y >= y1 && y <= y2)) {
       return true;
     }
 
