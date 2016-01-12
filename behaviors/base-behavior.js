@@ -71,7 +71,7 @@ class BaseBehavior {
    * @param {Object} datum - The datum to select.
    * @todo - Pass the shape object to get the accessors ?
    */
-  select(shape, datum) {
+  select(datum) {
     // $item.classList.add(this.selectedClass);
     this._selectedDatums.add(datum);
   }
@@ -80,7 +80,7 @@ class BaseBehavior {
    * @param {Object} datum - The datum to unselect.
    * @todo - Pass the shape object to get the accessors ?
    */
-  unselect(shape, datum) {
+  unselect(datum) {
     // $item.classList.remove(this.selectedClass);
     this._selectedDatums.delete(datum);
   }
@@ -89,9 +89,9 @@ class BaseBehavior {
    * @param {Object} datum - The datum to toggle selection.
    * @todo - Pass the shape object to get the accessors ?
    */
-  toggleSelection(shape, datum) {
+  toggleSelection(datum) {
     const method = this._selectedDatums.has(datum) ? 'unselect' : 'select';
-    this[method](shape, datum);
+    this[method](datum);
   }
 
   /**
@@ -112,6 +112,11 @@ class BaseBehavior {
   /**
    * TODO
    */
-  highlight(shape, datum, isHighlighted) { }
+  minimize() { }
+
+  /**
+   * TODO
+   */
+  highlight(datum, isHighlighted) { }
 
 }

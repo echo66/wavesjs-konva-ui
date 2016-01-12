@@ -34,4 +34,27 @@ class BreakpointBehavior extends BaseBehavior {
     shape.x(datum, renderingContext.timeToPixel.invert(targetX));
     shape.y(datum, renderingContext.valueToPixel.invert(targetY));
   }
+
+  select(datum) {
+    super.select(datum);
+    this.highlight(datum, true);
+  }
+
+  unselect(datum) {
+    super.unselect(datum);
+    this.highlight(datum, false);
+  }
+
+  highlight(datum, isHighlighted) {
+    const shape = this._layer.getShapeFromDatum(datum);
+    if (shape) {
+      if (isHighlighted) {
+        shape.params.color = 'red';
+      } else {
+        shape.params.color = 'black';
+      }
+    } else {
+      throw new Error('No shape for this datum in this layer', { datum: datum, layer: this._layer });
+    }
+  }
 }

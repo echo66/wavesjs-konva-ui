@@ -85,7 +85,7 @@ class Surface extends EventSource {
       window.addEventListener('mousemove', onMouseDrag, false);
       window.addEventListener('mouseup', onMouseUp, false);
 
-      // event.cancelBubble = true;
+      event.cancelBubble = true;
 
       this.emit('event', event);
     };
@@ -101,18 +101,37 @@ class Surface extends EventSource {
     };
 
     const onMouseUp = (e) => {
-      
-      let event = this._createEvent('mouseup', e);
-      this._defineArea(event, this._mouseDownEvent, this._lastEvent);
 
+      if (this._lastEvent.type == 'mousemove') {
 
-      this._mouseDownEvent = null;
-      this._lastEvent = null;
-      // Remove mousemove and mouseup listeners on window
-      window.removeEventListener('mousemove', onMouseDrag);
-      window.removeEventListener('mouseup', onMouseUp);
+        let event = this._createEvent('mouseup', e);
+        this._defineArea(event, this._mouseDownEvent, this._lastEvent);
 
-      this.emit('event', event);
+        this._mouseDownEvent = null;
+        this._lastEvent = null;
+        // Remove mousemove and mouseup listeners on window
+        window.removeEventListener('mousemove', onMouseDrag);
+        window.removeEventListener('mouseup', onMouseUp);
+
+        this.emit('event', event);
+
+      } else if (this._lastEvent.type == 'mousedown') {
+
+        let event1 = this._createEvent('mouseup', e);
+        let event2 = this._createEvent('click', e);
+        event2.target = this._mouseDownEvent.target;
+
+        this._mouseDownEvent = null;
+        this._lastEvent = null;
+
+        // Remove mousemove and mouseup listeners on window
+        window.removeEventListener('mousemove', onMouseDrag);
+        window.removeEventListener('mouseup', onMouseUp);
+
+        this.emit('event', event1);
+        this.emit('event', event2);
+
+      }
     };
 
     const onClick = (e) => {
@@ -140,10 +159,21 @@ class Surface extends EventSource {
       this.emit('event', event);
     }
 
+    /*
+     * When I listen for the 'click' event, there is the following issue for 'drag' sequences:
+     *
+     * (1) [mousedown -> mousemove -> click -> mouseup] 
+     *  instead of 
+     * (2) [mousedown -> mousemove -> mouseup]
+     * 
+     * For this reason, instead of directly listening for 'click', I adapted the 'mouseup' 
+     * listener to enforce the sequence (2) and [mousedown -> mouseup -> click] .
+     */
+
     // Bind callbacks
     // this.$el.$stage.on('contentMousedown', onMouseDownTimeline);
     this.$el.$stage.on('mousedown', onMouseDown);
-    this.$el.$stage.on('click', onClick);
+    // this.$el.$stage.on('click', onClick); 
     this.$el.$stage.on('dblclick', onDblClick);
     this.$el.$stage.on('mouseover', onMouseOver);
     this.$el.$stage.on('mouseout', onMouseOut);

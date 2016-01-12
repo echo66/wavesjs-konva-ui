@@ -49,7 +49,7 @@ class Layer extends events.EventEmitter {
 			.domain(this.params.yDomain)
 			.range([this.params.height, 0]);
 
-		this.Ls = new Set();
+		this.contentLayers = new Set();
 
 		this._commonShapeLayer = new Konva.FastLayer({});
 		this._commonShapeLayer.addName('common-shape-layer');
@@ -76,11 +76,6 @@ class Layer extends events.EventEmitter {
 		
 		this.track.$stage.add(this._contextLayer);
 		this.track.$stage.add(this._commonShapeLayer);
-
-		const that = this;
-
-		// this.Ls.add(this._contextLayer);
-		// this.Ls.add(this._commonShapeLayer);
 		
 	}
 
@@ -96,8 +91,8 @@ class Layer extends events.EventEmitter {
 	destroy() {
 		this._contextShape.destroy();
 		this._destroy(this._$datumToShape.values());
-		this._destroy(this.Ls.values);
-		this.Ls.clear();
+		this._destroy(this.contentLayers.values);
+		this.contentLayers.clear();
 
 		this._commonShapeLayer = null;
 		this._contextLayer = null;
@@ -279,33 +274,42 @@ class Layer extends events.EventEmitter {
 
 	
 	get selectedDatums() {
-		return this._behavior ? this._behavior.selectedDatums : [];
+		return this._behavior ? this._behavior.selectedDatums : new Set();
 	}
 
+	isSelected(datum) {
+		return this._behavior._selectedDatums.has(datum);
+	}
 
 	select($datums) {
-		if ($datums == undefined || $datums.length == undefined) 
+		if ($datums == undefined || ($datums.length == undefined && $datums.size == undefined))
 			$datums = this.data;
 
 		const that = this;
 		$datums.forEach((datum) => {
 			const shape = that._$datumToShape.get(datum)
 			if (shape) {
-				this._behavior.select(shape, datum);
+				this._behavior.select(datum);
 				this._toFront(datum);
+				that.emit('select', layer, datum);
+			} else {
+				throw new Error('No shape for this datum in this layer', { datum: datum, layer, that });
 			}
 		});
 	}
 
 	unselect($datums) {
-		if ($datums == undefined || $datums.length == undefined) 
+		if ($datums == undefined || ($datums.length == undefined && $datums.size == undefined))
 			$datums = this.data;
 		
 		const that = this;
 		$datums.forEach((datum) => {
 			const shape = that._$datumToShape.get(datum)
 			if (shape) {
-				this._behavior.unselect(shape, datum);
+				this._behavior.unselect(datum);
+				that.emit('unselect', layer, datum);
+			} else {
+				throw new Error('No shape for this datum in this layer', { datum: datum, layer, that });
 			}
 		});
 	}
@@ -318,18 +322,22 @@ class Layer extends events.EventEmitter {
 			} else {
 				$shape.$el.moveToTop();
 			}
+		} else {
+			throw new Error('No shape for this datum in this layer', { datum: datum, layer, that });
 		}
 	}
 
 
 	
 	toggleSelection($datums) {
-		console.log($datums[0]);
 		const that = this;
 		$datums.forEach((datum) => {
 			const shape = that._$datumToShape.get(datum)
 			if (shape) {
-				this._behavior.toggleSelection(shape, datum);
+				this._behavior.toggleSelection(datum);
+				that.emit('toggle-select', layer, datum);
+			} else {
+				throw new Error('No shape for this datum in this layer', { datum: datum, layer, that });
 			}
 		});
 	}
@@ -457,24 +465,24 @@ class Layer extends events.EventEmitter {
 		let x2 = area.left + area.width;
 		let y2 = area.top + area.height;
 
-		const $filteredDatums = [];
+		const $filteredDatums = new Set();
 
 		const $entries = this._$datumToShape.entries();
 
 
 		const that = this;
 
-		this.Ls.forEach((contentLayer) => {
+		this.contentLayers.forEach((contentLayer) => {
 			contentLayer.children.forEach((konvaShape) => {
 				const $shape = konvaShape.shape;
 				const $datum = that.getDatumFromShape($shape);
 				const inArea = $shape.inArea(this._renderingContext, $datum, x1, y1, x2, y2);
 
 				if (inArea) { 
-					$filteredDatums.push($datum);
+					$filteredDatums.add($datum);
 				}
 			});
-		})
+		});
 		
 		return $filteredDatums;
 	}
@@ -486,18 +494,10 @@ class Layer extends events.EventEmitter {
 
 		this.track.$stage.clear();
 
-		this.updateShapes();
 		this.updateContainer();
 
-		this.Ls.forEach((contentLayer) => {
-			contentLayer.batchDraw()
-		});
-
-
-		this._commonShapeLayer.batchDraw();
-		this._commonShapeLayer.moveToBottom();
-		this._contextLayer.batchDraw();
-		this._contextLayer.moveToBottom();
+		this.updateShapes();
+		
 	}
 
 
@@ -510,44 +510,55 @@ class Layer extends events.EventEmitter {
 	}
 
 
-	updateShapes() {
-
+	updateShapes($datums) {
 		const that = this;
-		if (this.oldDataLength != this.data.length) {
-			this.sort_data(this.data);
-			this.oldDataLength = this.data.length;
+		const changedContentLayers = new Set();
+		var targetData = null;
+		var interval = null;
+		var eraseChildren = true;
+
+		if ($datums == undefined || this._commonShape) {
+			interval = this.visible_data(this.timeContext, this.data);
 		}
 
-		var interval = this.visible_data(this.timeContext, this.data);
+		if ($datums == undefined) {
+			targetData = this.data.slice(interval[0], Math.min(interval[1]+1, this.data.length))
+		} else {
+			targetData = $datums;
+			eraseChildren = false;
+		}
 
-		for (var i=interval[0]; i <= interval[1] && i < this.data.length; i++) {
-			const $datum = this.data[i];
-
+		targetData.forEach(($datum) => {
 			const $shape = this._$datumToShape.get($datum);
 
 			$shape.update(this._renderingContext, $datum);
 
-			if ($shape.$el instanceof Array) {
-				var contentLayer = this.Ls.values().next().value;
-				for (var i=0; i<$shape.$el.length; i++)
-					contentLayer.add($shape.$el[i]);
-			} else {
-				var contentLayer = this.Ls.values().next().value;
-				contentLayer.add($shape.$el);
-			}
+			this._allocateShapeToLayers(this.track.$stage, $shape).forEach((changedContentLayer) => {
+				if (eraseChildren && !changedContentLayers.has(changedContentLayer)) {
+					changedContentLayer.removeChildren();
+				}
+				changedContentLayers.add(changedContentLayer);
+			});
+		});
 
-			
-		}
+		// console.log('number of changedContentLayers : ' + changedContentLayers.size);
+
+		changedContentLayers.forEach((changedContentLayer) => {
+			changedContentLayer.clear();
+			changedContentLayer.batchDraw();
+		});
 
 		if (this._commonShape) {
 			this._commonShape.update(this._renderingContext, data.slice(interval[0], interval[1]+1));
+			this._commonShapeLayer.batchDraw();
+			this._commonShapeLayer.moveToBottom();
 		}
 	}
 
 	updateContainer() {
 		this._updateRenderingContext();
 
-		this.Ls.forEach((contentLayer) => {
+		this.contentLayers.forEach((contentLayer) => {
 			contentLayer
 				.offsetX(-this._renderingContext.startX)
 				.x(this._renderingContext.offsetX)
@@ -560,40 +571,59 @@ class Layer extends events.EventEmitter {
 				.clip({x:-this._renderingContext.offsetX, y:0, width: this._renderingContext.width, height: this._renderingContext.height})
 				
 		this._contextShape.update(this._renderingContext, this.timeContext, 0);
+
+		this._contextLayer.batchDraw();
+		this._contextLayer.moveToBottom();
 	}
 
 
 
-	_shapeElementsStageAllocation(stage, shape) {
-		// TODO: remove empty layers
+	_allocateShapeToLayers(stage, shape) {
 		const LIMIT = Infinity;
-		const contentLayers = stage.find('.content-layer');
-		var els = (shape.$el instanceof Array)? shape.$el : [shape.$el];
-		var it = els.entries();
-		for (var i=0; i < contentLayers.length; i++) {
-			while (contentLayers[i].children.length < LIMIT) {
-				var entry = it.next();
-				if (entry.done)	return;
-				var el = entry.value[1];
-				// contentLayers[i].add(el);
+
+		const changedContentLayers = new Set();
+
+		const konvaShapes = (shape.$el instanceof Array)? shape.$el : [shape.$el];
+
+		const ksIt = konvaShapes.entries();
+
+		const clIt = this.contentLayers.entries();
+
+		var cle = clIt.next();
+		var kse = ksIt.next();
+
+		while (!cle.done) {
+			const layer = cle.value[1];
+			while (!kse.done && layer.children.length < LIMIT) {
+				const konvaShape = kse.value[1];
+				konvaShape.remove();
+				layer.add(konvaShape);
+				kse = ksIt.next();
+				changedContentLayers.add(layer);
 			}
+			cle = clIt.next();
 		}
-		var entry = it.next();
-		const that = this;
-		while (!entry.done) {
-			const L = new Konva.Layer({});
-			L.layer = this;
-			L.addName('content-layer');
-			this.Ls.add(L);
-			var el = entry.value[1];
-			// L.add(el);
-			stage.add(L);
-			entry = it.next();
+
+		while (!kse.done) {
+			const layer = new Konva.Layer({});
+			layer.layer = this;
+			layer.addName('content-layer');
+			layer.clearBeforeDraw(true);
+			this.contentLayers.add(layer);
+			stage.add(layer);
+			while (!kse.done && layer.children.length < LIMIT) {
+				const konvaShape = kse.value[1];
+				konvaShape.remove();
+				layer.add(konvaShape);
+				kse = ksIt.next();
+			}
+			changedContentLayers.add(layer);
 		}
+
+		return changedContentLayers;
 	}
 
 	set(data) {
-		// TODO: take care of the common shape
 		const that = this;
 
 		this.data.forEach((datum) => {
@@ -608,6 +638,8 @@ class Layer extends events.EventEmitter {
 		this.data.forEach((datum) => {
 			that._add(datum);
 		});
+
+		this.sort_data(this.data);
 	}
 
 	_add(datum) {
@@ -620,7 +652,7 @@ class Layer extends events.EventEmitter {
 		shape.render(this._renderingContext);
 		shape.layer = this;
 		shape.datum = datum;
-		this._shapeElementsStageAllocation(this.track.$stage, shape);
+		// this._shapeElementsStageAllocation(this.track.$stage, shape);
 		this._$datumToShape.set(datum, shape);
 		this._$shapeToDatum.set(shape, datum);
 	}
@@ -628,20 +660,27 @@ class Layer extends events.EventEmitter {
 	add(datum) {
 		this._add(datum);
 		this.data[this.data.length] = datum;
+		this.sort_data(this.data);
 	}
 
 	remove(datum) {
 		const shape = this._$datumToShape.get(datum);
 		if (shape) {
+			const changedContentLayers = new Set();
+			if (shape.$el instanceof Array) {
+				shape.$el.forEach((el) => changedContentLayers.add(el));
+			} else {
+				changedContentLayers.add(el);
+			}
 			shape.layer = null;
 			shape.destroy();
 			this._$datumToShape.delete(datum);
 			this._$shapeToDatum.delete(shape);
 
-			this.track.$stage.find('.content-layer').forEach((layer) => {
+			changedContentLayers.forEach((layer) => {
 				if (layer.children == 0) {
 					layer.destroy();
-					this.Ls.delete(layer);
+					this.contentLayers.delete(layer);
 				}
 			});
 		}

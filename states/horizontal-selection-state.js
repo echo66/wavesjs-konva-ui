@@ -5,20 +5,19 @@ class HorizontalSelectionState extends BaseState {
   constructor(timeline /*, options = {} */) {
     super(timeline /*, options */);
 
-    this.currentLayer = undefined;
-    // need a cached
-    this.selectedDatums = undefined;
-    this.mouseDown = false;
+    this._layerSelectedItemsMap = new Map();
+
     this.shiftKey = false;
 
-    this._layerSelectedItemsMap = new Map();
+    this.wasDragging = false;
   }
 
   enter() {
-
+    // TODO
   }
 
   exit() {
+    // TODO
     const containers = this.timeline.containers;
 
     for (let id in containers) {
@@ -106,16 +105,23 @@ class HorizontalSelectionState extends BaseState {
 
     // recreate the map
     this._layerSelectedItemsMap = new Map();
+    
     this._currentTrack.layers.forEach((layer) => {
-      const aux = [];
-      layer.selectedDatums.forEach((datum) => {
-        aux.push(datum);
-      })
-      this._layerSelectedItemsMap.set(layer, aux.slice(0));
+      
+      if (!e.originalEvent.shiftKey) {
+        const aux = new Set(layer.selectedDatums);
+        layer.unselect(aux);
+        layer.updateShapes(aux);
+      }
+
+      this._layerSelectedItemsMap.set(layer, new Set(layer.selectedDatums));
+      
     });
   }
 
   onMouseMove(e) {
+
+    this.wasDragging = true;
 
     e.area = {left: e.area.left, width:e.area.width, top: 0, height: this._currentTrack.height };
     
@@ -123,70 +129,90 @@ class HorizontalSelectionState extends BaseState {
 
     const that = this;
 
-    // console.log(e.area);
-
     this._currentTrack.layers.forEach((layer) => {
       const currentSelection = layer.selectedDatums;
-      const currentItems = layer.getDatumsInArea(e.area);
+      const datumsInArea = layer.getDatumsInArea(e.area);
+
+      var toSelect;
+      var toUnselect;
 
       // if is not pressed
-      if (!e.originalEvent.shiftKey) {
-        // console.log('---------------------------');
-        // console.log(currentSelection);
-        // console.log(currentItems);
-        // console.log('---------------------------');
-        layer.unselect(currentSelection);
-        layer.select(currentItems);
+      if (!e.originalEvent.shiftKey) {        
+
+        toUnselect = new Set(currentSelection);
+        toSelect = new Set(datumsInArea);
+
       } else {
-        const toSelect = [];
-        const toUnselect = [];
+
+        toSelect = new Set();
+        toUnselect = new Set();
         // use the selection from the previous drag
         const previousSelection = this._layerSelectedItemsMap.get(layer);
-        // toUnselect = toUnselect.concat(previousSelectedItems);
+        
 
-        currentItems.forEach((item) => {
-          if (previousSelection.indexOf(item) === -1) {
-            toSelect.push(item);
+        datumsInArea.forEach((datum) => {
+          if (!previousSelection.has(datum)) {
+            toSelect.add(datum);
           } else {
-            toUnselect.push(item);
+            toUnselect.add(datum);
           }
         });
 
-        currentSelection.forEach((item) => {
-          if (
-            currentItems.indexOf(item) === -1 &&
-            previousSelection.indexOf(item) === -1
-          ) {
-            toUnselect.push(item);
+        currentSelection.forEach((datum) => {
+          if (!datumsInArea.has(datum) && !previousSelection.has(datum)) {
+            toUnselect.add(datum);
           }
         });
 
-        layer.unselect(toUnselect);
-        layer.select(toSelect);
+        previousSelection.forEach((datum) => {
+          if (!datumsInArea.has(datum)) {
+            toSelect.add(datum);
+          }
+        });
+
       }
+
+      layer.unselect(toUnselect);
+      layer.select(toSelect);
+
+      layer.updateShapes(currentSelection);
+      layer.updateShapes(datumsInArea);
     });
   }
 
   onMouseUp(e) {
-    console.log('up');
     this._removeBrush(this._currentTrack);
+    if (this.wasDragging) {
+      this.wasDragging = false;
+      this._currentTrack.layers.forEach((layer) => {
+        // layer.updateShapes();
+      });
+    }
   }
 
   onClick(e) {
-    console.log('click');
+    // console.log('click');
     if (!this._currentTrack) { return; }
+    const that = this;
 
     this._currentTrack.layers.forEach((layer) => {
+
       const shape = e.target.shape;
       const datum = layer.getDatumFromShape(shape);
+      var toUpdate = new Set();
 
       if (!e.originalEvent.shiftKey) {
-        layer.unselect();
+        toUpdate = new Set(layer.selectedDatums);
+        layer.unselect(layer.selectedDatums);
       }
 
       if (datum) {
+        toUpdate.add(datum);
         layer.toggleSelection([datum]);
       }
+
+      layer.updateShapes(toUpdate);
+
     });
   }
 }

@@ -147,7 +147,7 @@ class BaseShape {
   update(renderingContext, datum) {}
 
   /**
-   *
+   *  TODO
    */
   draw() {
     if (this.$el instanceof Array) {
@@ -174,14 +174,14 @@ class BaseShape {
   inArea(renderingContext, datum, x1, y1, x2, y2) {}
 
   /*
-   * // TODO
+   * TODO
    */
   minimize() {}
 
   maximize() {}
 
   /**
-   * // TODO
+   * TODO
    */
   get highlight() {
     return this._highlight;
@@ -192,7 +192,7 @@ class BaseShape {
   }
 
   /*
-   * // TODO
+   * TODO
    */
   get visible() {
     return this._visible;
@@ -203,7 +203,7 @@ class BaseShape {
   }
 
   /*
-   * // TODO
+   * TODO
    */
   get datum() {
     return this._datum;
