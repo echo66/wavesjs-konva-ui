@@ -124,14 +124,14 @@ class Track extends events.EventEmitter {
     this.$backgroundLayer = new Konva.Layer({});
     this.$backgroundLayer.addName('track-background');
     this.$backgroundLayer.add(new Konva.Rect({}));
-    this.$backgroundLayer.children[0].shape = { layer: { track: this } }; // Shame!!! ..... Shame!!! .... Shame!!!
+    // this.$backgroundLayer.children[0].shape = { layer: { track: this } }; // Shame!!! ..... Shame!!! .... Shame!!!
 
     this.$dragLayer = new Konva.Layer({});
     this.$dragLayer.addName('track-drag-layer');
 
     this.$stage.add(this.$dragLayer);
     this.$stage.add(this.$interactionsLayer);
-    this.$stage.add(this.$backgroundLayer);
+    // this.$stage.add(this.$backgroundLayer);
   }
 
   /**

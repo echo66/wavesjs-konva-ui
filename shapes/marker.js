@@ -66,7 +66,7 @@ class Marker extends BaseShape {
     this.$handler.x(x).y(0).width(this.params.handlerWidth).height(this.params.handlerHeight).fill(this.params.handlerColor);
   }
 
-  inArea(renderingContext, x1, y1, x2, y2, datum) {
+  inArea(renderingContext, datum, x1, y1, x2, y2) {
     const d = datum || this.datum;
 
     // handlers only are selectable

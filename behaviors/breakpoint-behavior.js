@@ -23,6 +23,9 @@ class BreakpointBehavior extends BaseBehavior {
       }
     }
 
+    if (targetX < 0)
+      targetX = 0;
+
     // lock in y axis
     if (targetY < 0) {
       targetY = 0;

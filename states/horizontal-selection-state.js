@@ -197,6 +197,7 @@ class HorizontalSelectionState extends BaseState {
       const datum = layer.getDatumFromShape(shape);
       var toUpdate = new Set();
 
+      //TODO: correct this because it is not working as I expected to.  
       if (!e.originalEvent.shiftKey) {
         toUpdate = new Set(layer.selectedDatums);
         layer.unselect(layer.selectedDatums);

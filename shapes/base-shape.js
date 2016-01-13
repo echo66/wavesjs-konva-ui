@@ -201,4 +201,21 @@ class BaseShape {
   set datum(datum) {
     this._datum = datum;
   }
+
+
+  startDrag() {
+    if (this.$el instanceof Array) {
+      this.$el.forEach((el) => el.startDrag())
+    } else {
+      this.$el.startDrag();
+    }
+  }
+
+  stopDrag() {
+    if (this.$el instanceof Array) {
+      this.$el.forEach((el) => el.stopDrag())
+    } else {
+      this.$el.stopDrag();
+    }
+  }
 }

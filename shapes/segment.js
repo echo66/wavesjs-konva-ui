@@ -15,7 +15,7 @@ class Segment extends BaseShape {
 	getClassName() { return 'segment'; }
 
 	_getAccessorList() {
-		return { x: 0, y: 0, width: 0, height: 1};
+		return { x: 0, y: 0, width: 1, height: 1 };
 	}
 
 	_getDefaults() {
@@ -38,7 +38,6 @@ class Segment extends BaseShape {
 		this.$segment.name('segment');
 		// this.$segment.on('mouseover', function(e) { document.body.style.cursor = 'pointer'; });
 		// this.$segment.on('mouseout', function(e) { document.body.style.cursor = 'default'; });
-		this.$segment.opacity(this.params.opacity);
 		this.$segment.shape = this;
 
 		this.$el.push(this.$segment);
@@ -46,8 +45,6 @@ class Segment extends BaseShape {
 		this.$leftHandler = new Konva.Rect({});
 		this.$leftHandler.addName('left');
 		this.$leftHandler.addName('handler');
-		this.$leftHandler.width(this.params.handlerWidth);
-		this.$leftHandler.opacity(this.params.handlerOpacity);
 		// this.$leftHandler.on('mouseover', function() { document.body.style.cursor = 'ew-resize'; });
 		// this.$leftHandler.on('mouseout', function() { document.body.style.cursor = 'default'; });
 		this.$leftHandler.shape = this;
@@ -55,11 +52,13 @@ class Segment extends BaseShape {
 		this.$rightHandler = new Konva.Rect({});
 		this.$rightHandler.addName('right');
 		this.$rightHandler.addName('handler');
-		this.$rightHandler.width(this.params.handlerWidth);
-		this.$rightHandler.opacity(this.params.handlerOpacity);
 		// this.$rightHandler.on('mouseover', function() { document.body.style.cursor = 'ew-resize'; });
 		// this.$rightHandler.on('mouseout', function() { document.body.style.cursor = 'default'; });
 		this.$rightHandler.shape = this;
+
+		this.$segment.perfectDrawEnabled(false);
+		this.$leftHandler.perfectDrawEnabled(false);
+		this.$rightHandler.perfectDrawEnabled(false);
 
 		this.$el.push(this.$leftHandler);
 		this.$el.push(this.$rightHandler);
@@ -80,39 +79,44 @@ class Segment extends BaseShape {
 		const height = Math.abs(renderingContext.valueToPixel(this.y(d) + this.height(d)) - renderingContext.valueToPixel(this.y(d)));
 		const x = renderingContext.timeToPixel(this.x(d));
 		const y = renderingContext.valueToPixel(this.y(d) + this.height(d));
-		const color = this.color(d);
 
-		this.$segment.x(x).width(Math.max(width, 0)).height(height).fill(this.params.color).opacity(this.params.opacity);
+		this.$segment
+				.x(x)
+				.y(y)
+				.width(Math.max(width, 0))
+				.height(height)
+				.fill(this.params.color)
+				.opacity(this.params.opacity);
 
 		this.$leftHandler
-				.x(x).y(0)
+				.x(x)
+				.y(y)
 				.width(this.params.handlerWidth)
 				.height(height)
 				.fill(this.params.handlerColor)
 				.opacity(this.params.handlerOpacity);
 				
 		this.$rightHandler
-				.x(x + width - this.params.handlerWidth).y(0)
+				.x(x + width - this.params.handlerWidth)
+				.y(y)
 				.height(height)
 				.width(this.params.handlerWidth)
 				.fill(this.params.handlerColor)
 				.opacity(this.params.handlerOpacity);
 	}
 
-	inArea(renderingContext, x1, y1, x2, y2, datum) {
+	inArea(renderingContext, datum, x1, y1, x2, y2) {
 		const d = datum || this.datum;
 
-		const shapeX1 = renderingContext.timeToPixel(this.x(d));
-		const shapeX2 = renderingContext.timeToPixel(this.x(d) + this.width(d));
-		const shapeY1 = renderingContext.valueToPixel(this.y(d));
-		const shapeY2 = renderingContext.valueToPixel(this.y(d) + this.height(d));
+		const shapeX1 = this.$segment.getAbsolutePosition().x;
+		const shapeY1 = this.$segment.getAbsolutePosition().y;
+		const shapeX2 = shapeX1 + this.$segment.width();
+		const shapeY2 = shapeY1 + this.$segment.height();
 
-		// http://jsfiddle.net/uthyZ/ - check overlaping area
-		const xOverlap = Math.max(0, Math.min(x2, shapeX2) - Math.max(x1, shapeX1));
-		const yOverlap = Math.max(0, Math.min(y2, shapeY2) - Math.max(y1, shapeY1));
-		const area = xOverlap * yOverlap;
-
-		return area > 0;
+		if (x1 <= shapeX1 && x2 >= shapeX2 && y1 <= shapeY1 && y2 >= shapeY2)
+			return true;
+		else
+			return false;
 	}
 
 }

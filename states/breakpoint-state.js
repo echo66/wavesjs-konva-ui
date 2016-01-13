@@ -61,27 +61,38 @@ class BreakpointState extends BaseState {
           layer.select([datum]);
         }
       }
+
+      layer.selectedDatums.forEach((datum) => {
+        layer.getShapeFromDatum(datum).stopDrag();
+      });
+
     });
+
+    
 
     if (updatedLayer) {
       this.timeline.tracks.update(updatedLayer);
     }
   }
 
-  onMouseMove(e) {
+  onMouseMove(e, hitLayers) {
     if (!this.mouseDown || !this.currentEditedLayer) { return; }
 
     const layer = this.currentEditedLayer;
     const datums = layer.selectedDatums;
     // the loop should be in layer to match select / unselect API
-    datums.forEach((datum) => {
-      layer.edit([datum], e.dx, e.dy, this.currentTarget);
-    });
+    layer.edit(datums, e.dx, e.dy, this.currentTarget);
 
-    layer.update(datums);
+    layer.updateShapes(datums);
   }
 
-  onMouseUp(e) {
+  onMouseUp(e, hitLayers) {
+    const that = this;
+    hitLayers.forEach((layer) => {
+      layer.selectedDatums.forEach((datum) => {
+        layer.getShapeFromDatum(datum).stopDrag();
+      });
+    });
     this.currentEditedLayer = null;
     this.mouseDown = false;
   }

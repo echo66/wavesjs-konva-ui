@@ -8,14 +8,18 @@
 class TimeContextBehavior extends BaseBehavior {
 	edit(layer, dx, dy, target) {
 		const timeContext = layer.timeContext;
-		// TODO: update this class to the Konva version
-		if (target.classList.contains('handler') && target.classList.contains('left')) {
-			this._editLeft(timeContext, dx);
-		} else if (target.classList.contains('handler') && target.classList.contains('right')) {
-			this._editRight(timeContext, dx);
-		} else if (target.classList.contains('segment')) {
+
+		if (target.hasName('handler')) {
+			if (target.hasName('left')) 
+				this._editLeft(timeContext, dx);
+			else if (target.hasName('right')) 
+				this._editRight(timeContext, dx);
+			else 
+				throw new Error('Unexpected konva shape name');
+		} else if (target.hasName('segment')) 
 			this._move(timeContext, dx);
-		}
+		else 
+			throw new Error('Unexpected konva shape name');
 	}
 
 	_editLeft(timeContext, dx) {

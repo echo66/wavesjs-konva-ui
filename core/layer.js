@@ -16,7 +16,7 @@ class Layer extends events.EventEmitter {
 			className: null, // TODO
 			selectedClassName: 'selected',
 			context: {
-				handlerWidth: 2,
+				handlerWidth: 10,
 				handlerOpacity: 0.2,
 				opacity: 0.1, 
 				color: '#787878',
@@ -66,8 +66,9 @@ class Layer extends events.EventEmitter {
 			width	: () => this.timeContext.duration,
 			height	: () => this._renderingContext.valueToPixel.domain()[1],
 			y		: () => this._renderingContext.valueToPixel.domain()[0],
-			x		: () => this.timeContext.start
+			x		: () => this.timeContext.start / this.timeContext.stretchRatio
 		}); 
+		this._contextShape.params.handlerWidth = this.params.context.handlerWidth;
 		this._contextShape.render(this._renderingContext);
 		this._contextShape.layer = this;
 		for (var i=0; i<this._contextShape.$el.length; i++) {
@@ -553,6 +554,7 @@ class Layer extends events.EventEmitter {
 
 	updateContainer() {
 		this._updateRenderingContext();
+		const that = this;
 
 		this.contentLayers.forEach((contentLayer) => {
 			contentLayer
@@ -566,7 +568,7 @@ class Layer extends events.EventEmitter {
 				.x(this._renderingContext.offsetX)
 				.clip({x:-this._renderingContext.offsetX, y:0, width: this._renderingContext.width, height: this._renderingContext.height})
 				
-		this._contextShape.update(this._renderingContext, this.timeContext, 0);
+		this._contextShape.update(this._renderingContext, this.timeContext);
 
 		this._contextLayer.batchDraw();
 		this._contextLayer.moveToBottom();
@@ -575,7 +577,7 @@ class Layer extends events.EventEmitter {
 
 
 	_allocateShapesToLayers(stage, objs, type, eraseChildren) {
-		const LIMIT = 50;
+		const LIMIT = 200;
 
 		const changedContentLayers = new Set();
 
@@ -619,13 +621,18 @@ class Layer extends events.EventEmitter {
 		var cle = clIt.next();
 		var kse = ksIt.next();
 
+		var previousShape = undefined;
+
 		while (!cle.done) {
 			const layer = cle.value[1];
-			while (!kse.done && layer.children.length < LIMIT) {
+			while (!kse.done) {
+				const konvaShape = kse.value[1];
+				if (layer.children.length >= LIMIT && konvaShape.shape != previousShape) {
+					break;
+				}
 				if (eraseChildren && !changedContentLayers.has(layer)) {
 					layer.removeChildren();
 				}
-				const konvaShape = kse.value[1];
 				konvaShape.remove();
 				layer.add(konvaShape);
 				kse = ksIt.next();
@@ -707,7 +714,7 @@ class Layer extends events.EventEmitter {
 			if (shape.$el instanceof Array) {
 				shape.$el.forEach((el) => changedContentLayers.add(el));
 			} else {
-				changedContentLayers.add(el);
+				changedContentLayers.add(shape.$el);
 			}
 			shape.layer = null;
 			shape.destroy();
@@ -753,9 +760,8 @@ class Layer extends events.EventEmitter {
 			const shape = that._$datumToShape.get(datum);
 
 			this._behavior.edit(this._renderingContext, shape, datum, dx, dy, $target);
-
-			this.emit('edit', shape, datum);
 		});
+		this.emit('edit', $datums);
 	}
 
 
