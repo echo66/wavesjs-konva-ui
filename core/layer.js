@@ -528,17 +528,8 @@ class Layer extends events.EventEmitter {
 			eraseChildren = false;
 		}
 
-		targetData.forEach(($datum) => {
-			const $shape = this._$datumToShape.get($datum);
-
-			$shape.update(this._renderingContext, $datum);
-
-			this._allocateShapeToLayers(this.track.$stage, $shape).forEach((changedContentLayer) => {
-				if (eraseChildren && !changedContentLayers.has(changedContentLayer)) {
-					changedContentLayer.removeChildren();
-				}
-				changedContentLayers.add(changedContentLayer);
-			});
+		this._allocateShapesToLayers(this.track.$stage, targetData, 'datums', eraseChildren).forEach((changedContentLayer) => {
+			changedContentLayers.add(changedContentLayer);
 		});
 
 		// console.log('number of changedContentLayers : ' + changedContentLayers.size);
@@ -578,12 +569,43 @@ class Layer extends events.EventEmitter {
 
 
 
-	_allocateShapeToLayers(stage, shape) {
-		const LIMIT = Infinity;
+	_allocateShapesToLayers(stage, objs, type, eraseChildren) {
+		const LIMIT = 50;
 
 		const changedContentLayers = new Set();
 
-		const konvaShapes = (shape.$el instanceof Array)? shape.$el : [shape.$el];
+		const konvaShapes = new Set();
+
+		/*
+		 * Of course one could write less code by including the type checking inside the forEach.
+		 * But that would mean a check for each object. This way, the program checks only one time.
+		 * This is meant to be a small optimization. Not pretty, of course.
+		 * Another thing: in order to use just one forEach at updateShapes, I included the shape update in here
+		 */
+		const that = this;
+		if (type == 'datums') {
+			objs.forEach((datum) => {
+				const shape = that.getShapeFromDatum(datum);
+				shape.update(that._renderingContext, datum); 
+				if (shape.$el instanceof Array) {
+					shape.$el.forEach((el) => konvaShapes.add(el))
+				} else {
+					konvaShapes.add(shape.$el);
+				}
+			})
+		} else if (type == 'shapes') {
+			objs.forEach((shape) => {
+				const datum = that.getDatumFromShape(shape);
+				shape.update(that._renderingContext, datum); 
+				if (shape.$el instanceof Array) {
+					shape.$el.forEach((el) => konvaShapes.add(el))
+				} else {
+					konvaShapes.add(shape.$el);
+				}
+			});
+		} else {
+			throw new Error('Unknown objects type');
+		}
 
 		const ksIt = konvaShapes.entries();
 
@@ -595,6 +617,9 @@ class Layer extends events.EventEmitter {
 		while (!cle.done) {
 			const layer = cle.value[1];
 			while (!kse.done && layer.children.length < LIMIT) {
+				if (eraseChildren && !changedContentLayers.has(layer)) {
+					layer.removeChildren();
+				}
 				const konvaShape = kse.value[1];
 				konvaShape.remove();
 				layer.add(konvaShape);
@@ -652,7 +677,6 @@ class Layer extends events.EventEmitter {
 		shape.render(this._renderingContext);
 		shape.layer = this;
 		shape.datum = datum;
-		// this._shapeElementsStageAllocation(this.track.$stage, shape);
 		this._$datumToShape.set(datum, shape);
 		this._$shapeToDatum.set(shape, datum);
 	}
