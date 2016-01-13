@@ -33,10 +33,10 @@ class Track extends events.EventEmitter {
     this.$backgroundLayer = null;
 
     /**
-     * An array of all the layers belonging to the track.
-     * @type {Array<Layer>}
+     * A set of all the layers belonging to the track.
+     * @type {Set<Layer>}
      */
-    this.layers = [];
+    this.layers = new Set();
     /**
      * The context used to maintain the DOM structure of the track.
      * @type {TimelineTimeContext}
@@ -92,6 +92,7 @@ class Track extends events.EventEmitter {
    */
   destroy() {
     this.layers.forEach((layer) => layer.destroy());
+    this.layers.clear();
 
     this.$stage.destroy();
     this.$interactionsLayer.destroy();
@@ -103,7 +104,6 @@ class Track extends events.EventEmitter {
     this.$stage = null;
     this.$interactionsLayer = null;
     this.$backgroundLayer = null;
-    this.layers.length = 0;
     this.renderingContext = null;
   }
 
@@ -140,17 +140,25 @@ class Track extends events.EventEmitter {
    * @param {Layer} layer - the layer to add to the track.
    */
   add(layer) {
-    this.layers.push(layer);
+    layer.createContainer(this.$stage);
+    this.layers.add(layer);
+    this.emit('add', layer);
   }
 
   /**
-   * Removes a layer from the track. The layer can be reused elsewhere.
+   * Removes a layer from the track and destroys that alyer
    *
    * @param {Layer} layer - the layer to remove from the track.
    */
   remove(layer) {
-    this.layers.splice(this.layers.indexOf(layer), 1);
-    // TODO: Removes all konva layers that belong to the provided Layer.
+    // TODO
+    if (this.layers.has(layer)) {
+      this.layers.delete(layer);
+      layer.destroy();
+      this.emit('remove', layer);
+    } else {
+      throw new Error('Layer not found');
+    }
   }
 
   /**
@@ -223,7 +231,7 @@ class Track extends events.EventEmitter {
     layers = (layers === null) ? this.layers : layers;
 
     layers.forEach((layer) => {
-      if (this.layers.indexOf(layer) === -1) { return; }
+      if (!this.layers.has(layer)) { return; }
       layer.update();
     });
     this.$backgroundLayer.moveToBottom();

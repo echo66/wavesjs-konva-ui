@@ -303,21 +303,26 @@ class Timeline extends events.EventEmitter {
 
     this.tracks.push(track);
     this.createInteraction(this._surfaceCtor, track);
+
+    this.emit('add', track, trackId);
   }
 
   /**
-   * Removes a track from the timeline.
+   * Removes a track from the timeline and destroys that track.
    *
    * @param {Track} track - the track to remove from the timeline.
    * @todo not implemented.
    */
   remove(track) {
     const index = this.tracks.indexOf(track);
+    var trackId;
     if (this.tracks.indexOf(track) !== -1) {
       track.destroy();
       delete this._trackById[track.id];
+      trackId = track.id;
+      track.id = null;
     }
-    // TODO: should destroy interaction too, avoid ghost eventListeners
+    this.emit('remove', track, trackId);
   }
 
   /**
@@ -449,22 +454,13 @@ class Timeline extends events.EventEmitter {
    * @return {Track}
    */
   getTrackFromDOMElement($el) {
-    throw new Error('deprecated')
-    let $svg = null;
-    let track = null;
-    // find the closest `.track` element
-    do {
-      if ($el.classList.contains('track')) {
-        $svg = $el;
-      }
-      $el = $el.parentNode;
-    } while ($svg === null);
-    // find the related `Track`
-    this.tracks.forEach(function(_track) {
-      if (_track.$svg === $svg) { track = _track; }
-    });
+    
+    for (var i=0; i<this.tracks.length; i++) {
+      if (this.tracks[i].$stage.content === $el)
+        return track;
+    }
 
-    return track;
+    return undefined;
   }
 
   /**

@@ -2,7 +2,7 @@
 
 class Layer extends events.EventEmitter {
 
-	constructor(track, dataType, data, options) {
+	constructor(dataType, data, options) {
 		super();
 
 		if (!options) 
@@ -25,8 +25,6 @@ class Layer extends events.EventEmitter {
 		};
 
 		this._behavior = null;
-
-		this.track = track;
 
 		/**
 		* Parameters of the layers, `defaults` overrided with options.
@@ -58,7 +56,9 @@ class Layer extends events.EventEmitter {
 		this._contextLayer = new Konva.Layer({});
 		this._contextLayer.layer = this;
 		this._contextLayer.addName('context-layer');
+
 		this.setContextEditable(this._isContextEditable);
+		
 		this._contextShape = new Segment({});
 		this._contextShape.install({
 			opacity	: () => 1, 
@@ -73,10 +73,15 @@ class Layer extends events.EventEmitter {
 		for (var i=0; i<this._contextShape.$el.length; i++) {
 			this._contextLayer.add(this._contextShape.$el[i]);
 		}
-		
-		this.track.$stage.add(this._contextLayer);
-		this.track.$stage.add(this._commonShapeLayer);
-		
+
+		this._stage = null;
+	}
+
+	createContainer(stage) {
+		this._stage = stage;
+
+		this._stage.add(this._contextLayer);
+		this._stage.add(this._commonShapeLayer);
 	}
 
 
@@ -97,7 +102,7 @@ class Layer extends events.EventEmitter {
 		this._commonShapeLayer = null;
 		this._contextLayer = null;
 		this._contextShape = null;
-		this.track = track;
+		this._stage = null;
 		this.params = null;
 		this.timeContextBehavior = null;
 		this._shapeConfiguration = null;
@@ -492,7 +497,7 @@ class Layer extends events.EventEmitter {
 
 	update() {
 
-		this.track.$stage.clear();
+		// this.track.$stage.clear();
 
 		this.updateContainer();
 
@@ -528,7 +533,7 @@ class Layer extends events.EventEmitter {
 			eraseChildren = false;
 		}
 
-		this._allocateShapesToLayers(this.track.$stage, targetData, 'datums', eraseChildren).forEach((changedContentLayer) => {
+		this._allocateShapesToLayers(this._stage, targetData, 'datums', eraseChildren).forEach((changedContentLayer) => {
 			changedContentLayers.add(changedContentLayer);
 		});
 
@@ -657,6 +662,10 @@ class Layer extends events.EventEmitter {
 		});
 		this._$datumToShape.clear();
 		this._$shapeToDatum.clear();
+
+		this.contentLayers.forEach((layer)=> {
+			layer.destroy();
+		});
 		
 		this.data = data;
 
@@ -665,6 +674,8 @@ class Layer extends events.EventEmitter {
 		});
 
 		this.sort_data(this.data);
+
+		this.emit('set', data);
 	}
 
 	_add(datum) {
@@ -685,6 +696,8 @@ class Layer extends events.EventEmitter {
 		this._add(datum);
 		this.data[this.data.length] = datum;
 		this.sort_data(this.data);
+
+		this.emit('add', datum);
 	}
 
 	remove(datum) {
@@ -710,6 +723,8 @@ class Layer extends events.EventEmitter {
 		}
 
 		this.data.splice(this.data.indexOf(datum), 1);
+
+		this.emit('remove', datum);
 	}
 
 
@@ -754,6 +769,7 @@ class Layer extends events.EventEmitter {
 	editContext(dx, dy, $target) {
 		// TODO
 		this.timeContextBehavior.edit(this, dx, dy, $target);
+		this.emit('edit-context');
 	}
 
 	/**
@@ -766,6 +782,7 @@ class Layer extends events.EventEmitter {
 	stretchContext(dx, dy, $target) {
 		// TODO
 		this.timeContextBehavior.stretch(this, dx, dy, $target);
+		this.emit('stretch-context');
 	}
 
 	minimize() {

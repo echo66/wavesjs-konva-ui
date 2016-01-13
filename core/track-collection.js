@@ -49,8 +49,8 @@ class TrackCollection extends Array {
    * @type {Array<Layer>}
    */
   get layers() {
-    let layers = [];
-    this.forEach((track) => layers = layers.concat(track.layers));
+    let layers = new Set();
+    this.forEach((track) => track.layers.forEach((layer) => layers.add(layer)));
 
     return layers;
   }
