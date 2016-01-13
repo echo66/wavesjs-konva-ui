@@ -94,11 +94,7 @@ class SelectionState extends BaseState {
   }
 
   onMouseDown(e) {
-    // Shame!!! ..... Shame!!! .... Shame!!!
-    if (e.target.shape && e.target.shape.layer && e.target.shape.layer.track)
-      this._currentTrack = e.target.shape.layer.track;
-    else 
-      this._currentTrack = undefined;
+    this._currentTrack = this.timeline.getTrackFromDOMElement(e.currentTarget);
 
     if (!this._currentTrack) { return; }
 

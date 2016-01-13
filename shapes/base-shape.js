@@ -180,17 +180,6 @@ class BaseShape {
 
   maximize() {}
 
-  /**
-   * TODO
-   */
-  get highlight() {
-    return this._highlight;
-  }
-
-  set highlight(isHighlighted) {
-    this._highlight = isHighlighted;
-  }
-
   /*
    * TODO
    */

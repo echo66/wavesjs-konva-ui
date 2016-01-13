@@ -15,7 +15,7 @@ class Segment extends BaseShape {
 	getClassName() { return 'segment'; }
 
 	_getAccessorList() {
-		return { x: 0, y: 0, width: 0, height: 1, color: '#000000'};
+		return { x: 0, y: 0, width: 0, height: 1};
 	}
 
 	_getDefaults() {
@@ -24,11 +24,8 @@ class Segment extends BaseShape {
 			handlerWidth: 2,
 			handlerOpacity: 0.8,
 			opacity: 0.6, 
-			highlight: {
-				handlerWidth: 2,
-				handlerOpacity: 1,
-				opacity: 0.8, 
-			}
+			handlerColor: '#000000', 
+			color: '#000000',
 		};
 	}
 
@@ -79,35 +76,27 @@ class Segment extends BaseShape {
 
 		if (!this.visible)	return;
 
-		// TODO: move code from highlight and visible to here.
-
 		const width = renderingContext.timeToPixel(this.width(d));
 		const height = Math.abs(renderingContext.valueToPixel(this.y(d) + this.height(d)) - renderingContext.valueToPixel(this.y(d)));
 		const x = renderingContext.timeToPixel(this.x(d));
 		const y = renderingContext.valueToPixel(this.y(d) + this.height(d));
 		const color = this.color(d);
 
-		this.$segment.x(x).width(Math.max(width, 0)).height(height).fill(color);
+		this.$segment.x(x).width(Math.max(width, 0)).height(height).fill(this.params.color).opacity(this.params.opacity);
 
-
-		var handlerOpacity, handlerWidth, opacity;
-		if (super.highlight) {
-			handlerOpacity = this.params.highlight.handlerOpacity;
-			handlerWidth = this.params.highlight.handlerWidth;
-			opacity = this.params.highlight.opacity;
-		} else {
-			handlerOpacity = this.params.handlerOpacity;
-			handlerWidth = this.params.handlerWidth;
-			opacity = this.params.opacity;
-		}
-		this.$segment.fill(color).opacity(opacity);
-		this.$leftHandler.width(handlerWidth);
-		this.$leftHandler.fill(color).opacity(handlerOpacity);
-		this.$rightHandler.width(handlerWidth);
-		this.$rightHandler.fill(color).opacity(handlerOpacity);
-
-		this.$leftHandler.height(height).x(x).y(0).fill(color);
-		this.$rightHandler.height(height).x(x + width - this.params.handlerWidth).y(0).fill(color);
+		this.$leftHandler
+				.x(x).y(0)
+				.width(this.params.handlerWidth)
+				.height(height)
+				.fill(this.params.handlerColor)
+				.opacity(this.params.handlerOpacity);
+				
+		this.$rightHandler
+				.x(x + width - this.params.handlerWidth).y(0)
+				.height(height)
+				.width(this.params.handlerWidth)
+				.fill(this.params.handlerColor)
+				.opacity(this.params.handlerOpacity);
 	}
 
 	inArea(renderingContext, x1, y1, x2, y2, datum) {

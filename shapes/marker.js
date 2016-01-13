@@ -13,7 +13,7 @@ class Marker extends BaseShape {
   getClassName() { return 'marker'; }
 
   _getAccessorList() {
-    return { x: 0, color: '#ff0000' };
+    return { x: 0 };
   }
 
   _getDefaults() {
@@ -24,11 +24,7 @@ class Marker extends BaseShape {
       opacity: 1,
       strokeWidth: 2, 
       color: 'red',
-      highlight: {
-        opacity: 1,
-        strokeWidth: 2,
-        color: 'red'
-      }
+      handlerColor: 'red'
     };
   }
 
@@ -65,9 +61,9 @@ class Marker extends BaseShape {
 
     this.$line.x(x).y(0).width(this.params.strokeWidth);
     this.$line.height(height);
-    this.$line.fill(color);
+    this.$line.fill(this.params.color);
 
-    this.$handler.x(x).y(0).width(this.params.handlerWidth).height(this.params.handlerHeight).fill(color || this.params.color);
+    this.$handler.x(x).y(0).width(this.params.handlerWidth).height(this.params.handlerHeight).fill(this.params.handlerColor);
   }
 
   inArea(renderingContext, x1, y1, x2, y2, datum) {

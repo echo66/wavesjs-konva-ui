@@ -9,7 +9,7 @@ class HorizontalSelectionState extends BaseState {
 
     this.shiftKey = false;
 
-    this.wasDragging = false;
+    this.wasMoving = false;
   }
 
   enter() {
@@ -93,11 +93,7 @@ class HorizontalSelectionState extends BaseState {
   }
 
   onMouseDown(e) {
-    // Shame!!! ..... Shame!!! .... Shame!!!
-    if (e.target.shape && e.target.shape.layer && e.target.shape.layer.track)
-      this._currentTrack = e.target.shape.layer.track;
-    else 
-      this._currentTrack = undefined;
+    this._currentTrack = this.timeline.getTrackFromDOMElement(e.currentTarget);
 
     if (!this._currentTrack) { return; }
 
@@ -121,7 +117,7 @@ class HorizontalSelectionState extends BaseState {
 
   onMouseMove(e) {
 
-    this.wasDragging = true;
+    this.wasMoving = true;
 
     e.area = {left: e.area.left, width:e.area.width, top: 0, height: this._currentTrack.height };
     
@@ -182,11 +178,11 @@ class HorizontalSelectionState extends BaseState {
 
   onMouseUp(e) {
     this._removeBrush(this._currentTrack);
-    if (this.wasDragging) {
-      this.wasDragging = false;
-      this._currentTrack.layers.forEach((layer) => {
-        // layer.updateShapes();
-      });
+    if (this.wasMoving) {
+      this.wasMoving = false;
+      // this._currentTrack.layers.forEach((layer) => {
+      //   layer.updateShapes();
+      // });
     }
   }
 
