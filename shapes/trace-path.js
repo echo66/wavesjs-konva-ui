@@ -25,8 +25,10 @@ class TracePath extends BaseShape {
     this.$el = [];
 
     this.$range = new Konva.Path({});
+    this.$range.shape = this;
 
     this.$mean = new Konva.Path({});
+    this.$mean.shape = this;
 
     this.$el.push(this.$range);
     this.$el.push(this.$mean);

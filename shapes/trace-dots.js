@@ -1,10 +1,5 @@
 'use strict'
 
-
-/**
- * A shape to display dots in a trace visualization (mean / range).
- *
- */
 class TraceDots extends BaseShape {
   getClassName() { return 'trace-dots'; }
 
@@ -27,11 +22,14 @@ class TraceDots extends BaseShape {
     this.$el = [];
     // draw mean dot
     this.$mean = new Konva.Circle({});
+    this.$mean.shape = this;
 
     // range dots (0 => top, 1 => bottom)
     this.$max = new Konva.Circle({});
+    this.$max.shape = this;
 
     this.$min = new Konva.Circle({});
+    this.$min.shape = this;
 
     this.$el.push(this.$mean);
     this.$el.push(this.$max);

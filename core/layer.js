@@ -436,7 +436,11 @@ class Layer extends events.EventEmitter {
 		this._commonShape = new ctor(options);
 		this._commonShape.install(accessors);
 		this._commonShape.render(this._renderingContext);
-		this._commonShapeLayer.add(this._commonShape.$el);
+		if (this._commonShape.$el instanceof Array || this._commonShape.$el instanceof Set) {
+			this._commonShape.$el.forEach((el) => this._commonShapeLayer.add(el))
+		} else {
+			this._commonShapeLayer.add(this._commonShape.$el);
+		}
 	}
 
 	/**
