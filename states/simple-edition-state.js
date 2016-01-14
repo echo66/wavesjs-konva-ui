@@ -33,10 +33,27 @@ class SimpleEditionState extends BaseState {
   }
 
   onMouseDown(e) {
+    // TODO: allow shapes from multiple layers to be edited at the same time.
+    // TODO: move target shapes to the drag konva layer of each layer.
+
     // keep target consistent with mouse down
     this.currentTarget = e.target;
 
+    if (this.currentTarget.shape && this.currentTarget.shape.isContextShape) {
+      if (!e.originalEvent.shiftKey) 
+        this.timeline.getTrackFromDOMElement(e.currentTarget).layers.forEach((layer) => {
+          const aux = new Set(layer.selectedDatums);
+          layer.unselect(layer.selectedDatums)
+          layer.updateShapes(aux);
+        });
+      return;
+    } else if (!this.currentTarget.shape) 
+      return;
+
+    const layer = this.currentTarget.shape.layer;
+
     const a = new Set(layer.selectedDatums);
+
     if (this.currentTarget.shape.layer) {
       if (!e.originalEvent.shiftKey) {
         layer.unselect(layer.selectedDatums);
@@ -62,6 +79,9 @@ class SimpleEditionState extends BaseState {
   }
 
   onMouseMove(e) {
+    // TODO: allow shapes from multiple layers to be edited at the same time.
+    // TODO: move target shapes to the drag konva layer of each layer.
+
     if (!this.currentEditedLayer) { return; }
 
     const layer = this.currentEditedLayer;
@@ -72,10 +92,17 @@ class SimpleEditionState extends BaseState {
   }
 
   onMouseUp(e) {
+    // TODO: allow shapes from multiple layers to be edited at the same time.
+    // TODO: use Layer.allocateShapesToContentLayers to move the target shapes from the drag konva layers to a content konva layer.
+
     const that = this;
-    this.currentEditedLayer.updateShapes(layer.selectedDatums);
-    this.currentEditedLayer.selectedDatums.forEach((datum) => {
-      that.currentEditedLayer.getShapeFromDatum(datum).stopDrag();
+    const layer = this.currentEditedLayer;
+
+    if (!layer) return;
+
+    layer.updateShapes(layer.selectedDatums);
+    layer.selectedDatums.forEach((datum) => {
+      layer.getShapeFromDatum(datum).stopDrag();
     });
     this.currentEditedLayer = null;
   }

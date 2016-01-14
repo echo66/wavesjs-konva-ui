@@ -51,6 +51,8 @@ class Layer extends events.EventEmitter {
 
 		this.contentLayers = new Set();
 
+		this._dragLayer = new Konva.Layer({});
+
 		this._commonShapeLayer = new Konva.FastLayer({});
 		this._commonShapeLayer.addName('common-shape-layer');
 		this._commonShapeLayer.layer = this;
@@ -73,6 +75,7 @@ class Layer extends events.EventEmitter {
 		this._contextShape.params.handlerWidth = this.params.context.handlerWidth;
 		this._contextShape.render(this._renderingContext);
 		this._contextShape.layer = this;
+		this._contextShape.isContextShape = true;
 		for (var i=0; i<this._contextShape.$el.length; i++) {
 			this._contextLayer.add(this._contextShape.$el[i]);
 		}
@@ -80,11 +83,27 @@ class Layer extends events.EventEmitter {
 		this._stage = null;
 	}
 
+	get visible() {
+		return this._dragLayer.visible();
+	}
+
+	set visible(value) {
+		this._contextLayer.visible(value);
+		this._commonShapeLayer.visible(value);
+		this._dragLayer.visible(value);
+		this.contentLayer.forEach((l) => l.visible(value));
+	}
+
+	get zIndex() {
+		return this._contextLayer.getZIndex();
+	}
+
 	createContainer(stage) {
 		this._stage = stage;
 
 		this._stage.add(this._contextLayer);
 		this._stage.add(this._commonShapeLayer);
+		this._stage.add(this._dragLayer);
 	}
 
 
@@ -299,9 +318,9 @@ class Layer extends events.EventEmitter {
 			if (shape) {
 				this._behavior.select(datum);
 				this._toFront(datum);
-				that.emit('select', layer, datum);
+				that.emit('select', datum);
 			} else {
-				throw new Error('No shape for this datum in this layer', { datum: datum, layer, that });
+				throw new Error('No shape for this datum in this layer', { datum: datum, layer: that });
 			}
 		});
 	}
@@ -315,9 +334,9 @@ class Layer extends events.EventEmitter {
 			const shape = that._$datumToShape.get(datum)
 			if (shape) {
 				this._behavior.unselect(datum);
-				that.emit('unselect', layer, datum);
+				that.emit('unselect', datum);
 			} else {
-				throw new Error('No shape for this datum in this layer', { datum: datum, layer, that });
+				throw new Error('No shape for this datum in this layer', { datum: datum, layer: that });
 			}
 		});
 	}
@@ -331,8 +350,24 @@ class Layer extends events.EventEmitter {
 				$shape.$el.moveToTop();
 			}
 		} else {
-			throw new Error('No shape for this datum in this layer', { datum: datum, layer, that });
+			throw new Error('No shape for this datum in this layer', { datum: datum, layer: that });
 		}
+	}
+
+	toDragLayer($datums) {
+		const that = this;
+		$datums.forEach(($datum) => {
+			const $shape = this._$datumToShape.get($datum);
+			if (shape) {
+				if ($shape.$el instanceof Array || $shape.$el instanceof Set) {
+					$shape.$el.forEach((el) => that._dragLayer.add(el));
+				} else {
+					this._dragLayer.add($shape.$el);
+				}
+			} else {
+				throw new Error('No shape for this datum in this layer', { datum: datum, layer: that });
+			}
+		});
 	}
 
 
@@ -343,9 +378,9 @@ class Layer extends events.EventEmitter {
 			const shape = that._$datumToShape.get(datum)
 			if (shape) {
 				this._behavior.toggleSelection(datum);
-				that.emit('toggle-select', layer, datum);
+				that.emit('toggle-select', datum);
 			} else {
-				throw new Error('No shape for this datum in this layer', { datum: datum, layer, that });
+				throw new Error('No shape for this datum in this layer', { datum: datum, layer: that });
 			}
 		});
 	}
@@ -531,7 +566,7 @@ class Layer extends events.EventEmitter {
 			eraseChildren = false;
 		}
 
-		this._allocateShapesToLayers(this._stage, targetData, 'datums', eraseChildren).forEach((changedContentLayer) => {
+		this.allocateShapesToContentLayers(this._stage, targetData, 'datums', eraseChildren).forEach((changedContentLayer) => {
 			changedContentLayers.add(changedContentLayer);
 		});
 
@@ -552,6 +587,18 @@ class Layer extends events.EventEmitter {
 			changedContentLayer.batchDraw();
 		});
 
+		this._dragLayer
+				.y(that.params.top)
+				.offsetX(-that._renderingContext.startX)
+				.x(that._renderingContext.offsetX)
+				.clip({ 
+					x: -that._renderingContext.offsetX, 
+					y: 0, 
+					width: that._renderingContext.width, 
+					height: that._renderingContext.height 
+				}).clear().batchDraw();
+
+
 		if (this._commonShape) {
 			this._commonShapeLayer
 				.y(that.params.top)
@@ -563,9 +610,9 @@ class Layer extends events.EventEmitter {
 					width: that._renderingContext.width, 
 					height: that._renderingContext.height
 				})
-			this._commonShape.update(this._renderingContext, data.slice(interval[0], interval[1]+1));
+			this._commonShape.update(this._renderingContext, that.data.slice(interval[0], interval[1]+1));
 			this._commonShapeLayer.batchDraw();
-			this._commonShapeLayer.moveToBottom();
+			// this._commonShapeLayer.moveToBottom();
 		}
 
 		this._contextShape.update(this._renderingContext, this.timeContext);
@@ -573,7 +620,7 @@ class Layer extends events.EventEmitter {
 		this._contextLayer
 				.y(that.params.top)
 				.batchDraw()
-				.moveToBottom();
+				// .moveToBottom();
 	}
 
 	updateContainer() {
@@ -590,8 +637,8 @@ class Layer extends events.EventEmitter {
 
 
 
-	_allocateShapesToLayers(stage, objs, type, eraseChildren) {
-		const LIMIT = Infinity;
+	allocateShapesToContentLayers(stage, objs, type, eraseChildren) {
+		const LIMIT = Infinity; // TODO: make the LIMIT a dynamic variable, controlled by a user defined function.
 
 		const changedContentLayers = new Set();
 
@@ -607,6 +654,9 @@ class Layer extends events.EventEmitter {
 		if (type == 'datums') {
 			objs.forEach((datum) => {
 				const shape = that.getShapeFromDatum(datum);
+				if (shape == undefined) {
+					throw new Error('Unknown datum', { datum: datum, layer: that });
+				}
 				shape.update(that._renderingContext, datum); 
 				if (shape.$el instanceof Array || shape.$el instanceof Set) {
 					shape.$el.forEach((el) => konvaShapes.add(el))
@@ -617,6 +667,9 @@ class Layer extends events.EventEmitter {
 		} else if (type == 'shapes') {
 			objs.forEach((shape) => {
 				const datum = that.getDatumFromShape(shape);
+				if (datum == undefined) {
+					throw new Error('Unknown shape', { shape: shape, layer: that });
+				}
 				shape.update(that._renderingContext, datum); 
 				if (shape.$el instanceof Array || shape.$el instanceof Set) {
 					shape.$el.forEach((el) => konvaShapes.add(el))

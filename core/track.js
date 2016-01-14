@@ -131,7 +131,7 @@ class Track extends events.EventEmitter {
 
     this.$stage.add(this.$dragLayer);
     this.$stage.add(this.$interactionsLayer);
-    // this.$stage.add(this.$backgroundLayer);
+    this.$stage.add(this.$backgroundLayer);
   }
 
   /**
@@ -140,9 +140,12 @@ class Track extends events.EventEmitter {
    * @param {Layer} layer - the layer to add to the track.
    */
   add(layer) {
-    layer.createContainer(this.$stage);
-    this.layers.add(layer);
-    this.emit('add', layer);
+    if (!this.layers.has(layer)) {
+      layer.createContainer(this.$stage);
+      this.layers.add(layer);
+      this.moveToTop(layer);
+      this.emit('add', layer);
+    }
   }
 
   /**
@@ -216,7 +219,21 @@ class Track extends events.EventEmitter {
     this.$backgroundLayer.offsetX(-offsetX);
     this.$backgroundLayer.children[0].x(0).y(0).width(this.width).height(this.height).opacity(0).moveToBottom();
     this.$backgroundLayer.batchDraw();
-    this.$backgroundLayer.moveToBottom();
+
+    /*
+     * Change the layer stack order according to Layer.zIndex.
+     */
+    // var zIndexCounter = 0;
+    // var maxZIndex = -Infinity;
+    // this.$backgroundLayer.setZIndex(zIndexCounter++);
+    // this.layers.forEach((layer) => {
+    //   layer._contextLayer.setZIndex(layer.zIndex + zIndexCounter++);
+    //   layer._commonShapeLayer.setZIndex(layer.zIndex + zIndexCounter++);
+    //   layer.contentLayers.forEach((konvaLayer) => konvaLayer.setZIndex(layer.zIndex + zIndexCounter++));
+    //   layer._dragLayer.setZIndex(layer.zIndex + zIndexCounter++);
+    //   maxZIndex = Math.max(maxZIndex, layer.zIndex);
+    // })
+    // this.$interactionsLayer.setZIndex(maxZIndex + zIndexCounter);
   }
 
   /**
@@ -239,6 +256,25 @@ class Track extends events.EventEmitter {
 
   minimize() {
     // TODO
+  }
+
+  moveToTop(layer) {
+    layer._contextLayer.moveToTop();
+    layer._commonShapeLayer.moveToTop();
+    layer.contentLayers.forEach((konvaLayer) => konvaLayer.moveToTop());
+
+    this.$interactionsLayer.moveToTop();
+    this.$backgroundLayer.moveToBottom();
+  }
+
+  moveToBottom(layer) {
+    this.$interactionsLayer.moveToTop();
+    
+    layer.contentLayers.forEach((konvaLayer) => konvaLayer.moveToBottom());
+    layer._commonShapeLayer.moveToBottom();
+    layer._contextLayer.moveToBottom();
+    
+    this.$backgroundLayer.moveToBottom();
   }
 
 

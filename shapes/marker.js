@@ -56,7 +56,6 @@ class Marker extends BaseShape {
     if (!this.visible)  return;
 
     const x = renderingContext.timeToPixel(this.x(d)) - 0.5;
-    const color = this.color(d);
     const height = renderingContext.height;
 
     this.$line.x(x).y(0).width(this.params.strokeWidth);

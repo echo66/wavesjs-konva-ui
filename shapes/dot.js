@@ -11,12 +11,12 @@ class Dot extends BaseShape {
 
 	// @TODO rename : confusion between accessors and meta-accessors
 	_getAccessorList() {
-		return { x: 0, y: 0, r: 3, color: '#000000'};
+		return { x: 0, y: 0 };
 	}
 
 	_getDefaults() {
 		return {
-			color: '#000000', 
+			color: 'black', 
 			r: 3
 		};
 	}
