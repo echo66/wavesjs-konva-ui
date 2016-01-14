@@ -5,6 +5,8 @@ class Layer extends events.EventEmitter {
 	constructor(dataType, data, options) {
 		super();
 
+		this.dataType = dataType;
+
 		if (!options) 
 			options = {};
 
@@ -18,7 +20,7 @@ class Layer extends events.EventEmitter {
 			context: {
 				handlerWidth: 10,
 				handlerOpacity: 0.2,
-				opacity: 0.1, 
+				opacity: 0.5, 
 				color: '#787878',
 			}, 
 			hittable: true, // when false the layer is not returned by `BaseState.getHitLayers`
@@ -323,7 +325,7 @@ class Layer extends events.EventEmitter {
 	_toFront($datum) {
 		const $shape = this._$datumToShape.get($datum);
 		if ($shape) {
-			if ($shape.$el instanceof Array) {
+			if ($shape.$el instanceof Array || $shape.$el instanceof Set) {
 				$shape.$el.forEach((el) => el.moveToTop());
 			} else {
 				$shape.$el.moveToTop();
@@ -413,6 +415,7 @@ class Layer extends events.EventEmitter {
 		// this._contextLayer.visible(editable);
 		this._contextLayer.opacity((editable)? this.params.context.opacity : 0);
 		this._contextLayer.listening(true);
+		this._contextLayer.visible(true);
 		this._isContextEditable = editable;
 	}
 	
@@ -469,12 +472,11 @@ class Layer extends events.EventEmitter {
 		let x1 = area.left;
 		let y1 = area.top;
 		let x2 = area.left + area.width;
-		let y2 = area.top + area.height;
+		let y2 = area.top + area.height + this.params.top;
 
 		const $filteredDatums = new Set();
 
 		const $entries = this._$datumToShape.entries();
-
 
 		const that = this;
 
@@ -493,16 +495,11 @@ class Layer extends events.EventEmitter {
 		return $filteredDatums;
 	}
 
-
-
-
-	update() {
-
-		// this.track.$stage.clear();
+	update($datums) {
 
 		this.updateContainer();
 
-		this.updateShapes();
+		this.updateShapes($datums);
 		
 	}
 
@@ -541,15 +538,42 @@ class Layer extends events.EventEmitter {
 		// console.log('number of changedContentLayers : ' + changedContentLayers.size);
 
 		changedContentLayers.forEach((changedContentLayer) => {
+			changedContentLayer
+				.y(that.params.top)
+				.offsetX(-that._renderingContext.startX)
+				.x(that._renderingContext.offsetX)
+				.clip({ 
+					x: -that._renderingContext.offsetX, 
+					y: 0, 
+					width: that._renderingContext.width, 
+					height: that._renderingContext.height 
+				})
 			changedContentLayer.clear();
 			changedContentLayer.batchDraw();
 		});
 
 		if (this._commonShape) {
+			this._commonShapeLayer
+				.y(that.params.top)
+				.offsetX(-that._renderingContext.startX)
+				.x(that._renderingContext.offsetX)
+				.clip({ 
+					x: -that._renderingContext.offsetX, 
+					y: 0, 
+					width: that._renderingContext.width, 
+					height: that._renderingContext.height
+				})
 			this._commonShape.update(this._renderingContext, data.slice(interval[0], interval[1]+1));
 			this._commonShapeLayer.batchDraw();
 			this._commonShapeLayer.moveToBottom();
 		}
+
+		this._contextShape.update(this._renderingContext, this.timeContext);
+
+		this._contextLayer
+				.y(that.params.top)
+				.batchDraw()
+				.moveToBottom();
 	}
 
 	updateContainer() {
@@ -562,22 +586,12 @@ class Layer extends events.EventEmitter {
 				.x(this._renderingContext.offsetX)
 				.clip({x:-this._renderingContext.offsetX, y:0, width: this._renderingContext.width, height: this._renderingContext.height})
 		});
-
-		this._commonShapeLayer
-				.offsetX(-this._renderingContext.startX)
-				.x(this._renderingContext.offsetX)
-				.clip({x:-this._renderingContext.offsetX, y:0, width: this._renderingContext.width, height: this._renderingContext.height})
-				
-		this._contextShape.update(this._renderingContext, this.timeContext);
-
-		this._contextLayer.batchDraw();
-		this._contextLayer.moveToBottom();
 	}
 
 
 
 	_allocateShapesToLayers(stage, objs, type, eraseChildren) {
-		const LIMIT = 200;
+		const LIMIT = Infinity;
 
 		const changedContentLayers = new Set();
 
@@ -594,7 +608,7 @@ class Layer extends events.EventEmitter {
 			objs.forEach((datum) => {
 				const shape = that.getShapeFromDatum(datum);
 				shape.update(that._renderingContext, datum); 
-				if (shape.$el instanceof Array) {
+				if (shape.$el instanceof Array || shape.$el instanceof Set) {
 					shape.$el.forEach((el) => konvaShapes.add(el))
 				} else {
 					konvaShapes.add(shape.$el);
@@ -604,7 +618,7 @@ class Layer extends events.EventEmitter {
 			objs.forEach((shape) => {
 				const datum = that.getDatumFromShape(shape);
 				shape.update(that._renderingContext, datum); 
-				if (shape.$el instanceof Array) {
+				if (shape.$el instanceof Array || shape.$el instanceof Set) {
 					shape.$el.forEach((el) => konvaShapes.add(el))
 				} else {
 					konvaShapes.add(shape.$el);
@@ -711,7 +725,7 @@ class Layer extends events.EventEmitter {
 		const shape = this._$datumToShape.get(datum);
 		if (shape) {
 			const changedContentLayers = new Set();
-			if (shape.$el instanceof Array) {
+			if (shape.$el instanceof Array || shape.$el instanceof Set) {
 				shape.$el.forEach((el) => changedContentLayers.add(el));
 			} else {
 				changedContentLayers.add(shape.$el);
