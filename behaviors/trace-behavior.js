@@ -31,7 +31,32 @@ class TraceBehavior extends BaseBehavior {
     targetRange = Math.max(targetRange, 0);
 
     shape.range(datum, Math.max(0, renderingContext.valueToPixel.invert(targetRange)));
+  }
 
-    console.log(datum);
+  select(datum) {
+    super.select(datum);
+    this.highlight(datum, true);
+  }
+
+  unselect(datum) {
+    super.unselect(datum);
+    this.highlight(datum, false);
+  }
+
+  highlight(datum, isHighlighted) {
+    const shape = this._layer.getShapeFromDatum(datum);
+    console.log(shape)
+    if (shape) {
+      if (isHighlighted) {
+        shape.params.meanColor = 'red';
+        shape.params.rangeColor = 'red';
+      } else {
+        const defaults = shape._getDefaults();
+        shape.params.meanColor = defaults.meanColor;
+        shape.params.rangeColor = defaults.rangeColor;
+      }
+    } else {
+      throw new Error('No shape for this datum in this layer', { datum: datum, layer: this._layer });
+    }
   }
 }

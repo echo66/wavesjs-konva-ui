@@ -41,7 +41,7 @@ class Track extends events.EventEmitter {
      * The context used to maintain the DOM structure of the track.
      * @type {TimelineTimeContext}
      */
-    this.renderingContext = null;
+    this.renderingContext = new TimelineTimeContext(this._width / 60, this._width);
 
     this._createContainer();
   }
@@ -255,6 +255,10 @@ class Track extends events.EventEmitter {
   }
 
   minimize() {
+    // TODO
+  }
+
+  maximize() {
     // TODO
   }
 

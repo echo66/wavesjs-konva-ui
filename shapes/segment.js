@@ -113,10 +113,22 @@ class Segment extends BaseShape {
 		const shapeX2 = shapeX1 + this.$segment.width();
 		const shapeY2 = shapeY1 + this.$segment.height();
 
-		if (x1 <= shapeX1 && x2 >= shapeX2 && y1 <= shapeY1 && y2 >= shapeY2)
-			return true;
-		else
-			return false;
+		/*
+		 *	The segment is entirely within the provided area.
+		 */
+		// if (x1 <= shapeX1 && x2 >= shapeX2 && y1 <= shapeY1 && y2 >= shapeY2)
+		// 	return true;
+		// else
+		// 	return false;
+
+		/*
+		 *	The segment overlaps the provided area.
+		 */
+		const xOverlap = Math.max(0, Math.min(x2, shapeX2) - Math.max(x1, shapeX1));
+		const yOverlap = Math.max(0, Math.min(y2, shapeY2) - Math.max(y1, shapeY1));
+		const area = xOverlap * yOverlap;
+
+		return area > 0;
 	}
 
 }

@@ -23,8 +23,8 @@ class Marker extends BaseShape {
       displayHandlers: true,
       opacity: 1,
       strokeWidth: 2, 
-      color: 'red',
-      handlerColor: 'red'
+      color: 'black',
+      handlerColor: 'black'
     };
   }
 
