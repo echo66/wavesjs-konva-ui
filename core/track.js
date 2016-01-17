@@ -7,16 +7,13 @@ class Track extends events.EventEmitter {
    * @param {DOMElement} $el
    * @param {Number} [height = 100]
    */
-  constructor($el, height, width) {
+  constructor($el, height) {
     super();
 
     if (!height)
       height = 100;
-    if (!width)
-      width  = 500;
 
     this._height = height;
-    this._width  = width;
 
     /**
      * The DOM element in which the track is created.
@@ -41,18 +38,9 @@ class Track extends events.EventEmitter {
      * The context used to maintain the DOM structure of the track.
      * @type {TimelineTimeContext}
      */
-    this.renderingContext = new TimelineTimeContext(this._width / 60, this._width);
+    this.renderingContext = null;
 
     this._createContainer();
-  }
-
-
-  get width() {
-    return this._width;
-  }
-
-  set width(value) {
-    this._width = value;
   }
 
 
@@ -99,7 +87,6 @@ class Track extends events.EventEmitter {
     this.$backgroundLayer.destroy();
 
     this._height = null;
-    this._width  = null;
     this.$el = null;
     this.$stage = null;
     this.$interactionsLayer = null;
@@ -112,7 +99,6 @@ class Track extends events.EventEmitter {
    */
   _createContainer() {
     this.$stage = new Konva.Stage({
-      width: this.width, 
       height: this.height, 
       container: this.$el
     });
@@ -214,10 +200,10 @@ class Track extends events.EventEmitter {
     const width = Math.round(renderingContext.visibleWidth);
     const offsetX = -Math.round(renderingContext.timeToPixel(renderingContext.offset));
 
-    this.$stage.width(this.width).height(this.height).offsetX(offsetX);
+    this.$stage.width(width).height(this.height).offsetX(offsetX);
     this.$interactionsLayer.offsetX(-offsetX);
     this.$backgroundLayer.offsetX(-offsetX);
-    this.$backgroundLayer.children[0].x(0).y(0).width(this.width).height(this.height).opacity(0).moveToBottom();
+    this.$backgroundLayer.children[0].x(0).y(0).width(width).height(this.height).opacity(0).moveToBottom();
     this.$backgroundLayer.batchDraw();
 
     /*

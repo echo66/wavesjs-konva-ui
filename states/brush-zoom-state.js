@@ -41,7 +41,7 @@ class BrushZoomState extends BaseState {
 			this.brushes.push(brush);
 
 			interactions.batchDraw();
-			interactions.moveToTop();
+			// interactions.moveToTop();
 		});
 	}
 

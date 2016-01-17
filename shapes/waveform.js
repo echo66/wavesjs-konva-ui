@@ -35,7 +35,7 @@ class Waveform extends BaseShape {
 
 	_getDefaults() {
 		return {
-			waveformQuality: 5000, 
+			waveformQuality: 6000, 
 			squaringFactor: 1, 
 			displayHandlers: true, 
 			headerHeightRatio: 0.1, // 10% of the body height
@@ -65,24 +65,36 @@ class Waveform extends BaseShape {
 		this.$el = [];
 
 		this.$header = new Konva.Rect({});
+		this.$header.addName('header');
+		this.$header.shape = this;
 		// this.$header.on('mouseover', function() { document.body.style.cursor = 'pointer'; });
 		// this.$header.on('mouseout', function() { document.body.style.cursor = 'default'; });		
 
 		this.$body	 = new Konva.Rect({});
+		this.$body.addName('body');
+		this.$body.shape = this;
 		// this.$body.on('mouseover', function() { document.body.style.cursor = 'pointer'; });
 		// this.$body.on('mouseout', function() { document.body.style.cursor = 'default'; });
 
 		this.$leftHandler = new Konva.Rect({});
+		this.$leftHandler.addName('handler');
+		this.$leftHandler.addName('left');
+		this.$leftHandler.shape = this;
 		// this.$leftHandler.on('mouseover', function() { document.body.style.cursor = 'ew-resize'; });
 		// this.$leftHandler.on('mouseout', function() { document.body.style.cursor = 'default'; });
 
 		this.$rightHandler = new Konva.Rect({});
+		this.$rightHandler.addName('handler');
+		this.$rightHandler.addName('right');
+		this.$rightHandler.shape = this;
 		// this.$rightHandler.on('mouseover', function() { document.body.style.cursor = 'ew-resize'; });
 		// this.$rightHandler.on('mouseout', function() { document.body.style.cursor = 'default'; });
 
 		this.$label = new Konva.Text({ listening: false });
+		this.$label.shape = this;
 
 		this.$waveform = new Konva.Path({ listening: false });
+		this.$waveform.shape = this;
 
 		this.$el.push(this.$body);
 		this.$el.push(this.$waveform);
@@ -106,10 +118,10 @@ class Waveform extends BaseShape {
 		if (!this.visible)	return;
 
 
-		const x = renderingContext.timeToPixel(this.x(d));
-		const width = renderingContext.timeToPixel(this.width(d));
-		const height = renderingContext.height;
-		const color = this.params.waveform.color;
+		var  x = renderingContext.timeToPixel(this.x(d));
+		var width = renderingContext.timeToPixel(this.width(d));
+		var height = renderingContext.height;
+		var color = this.params.waveform.color;
 
 		for (var i in this.$el) {
 			this.$el[i].x(x).y(0);
@@ -132,52 +144,109 @@ class Waveform extends BaseShape {
 
 		this.$waveform.fill(this.params.waveform.color).opacity(this.params.waveform.opacity).y(0);
 
-		this.$waveform.perfectDrawEnabled(false);
-
-		if (this.oldPixelsPerSecond == renderingContext.pixelsPerSecond) 
-			return;
-		else 
-			this.oldPixelsPerSecond = renderingContext.pixelsPerSecond;
+		this.$waveform.perfectDrawEnabled(true);
 
 
-		this.$waveform.clearCache();
+		// WAVEFORM PART
 
-		// THIS VERSION GENERATES TWO PATHS, BOTH MIRROR OF THE OTHER, ALIGNED AT THE CENTER OF THE YDOMAIN.
-		const arr = this.data(d).subarray(this.bufferStart(d), this.bufferEnd(d));
-		const ORIGINSIZE = arr.length;
-		const WANTEDSIZE = this.params.waveformQuality ;
-		const that = this;
-		const speed = ORIGINSIZE / WANTEDSIZE;
-		const yDomain = renderingContext.valueToPixel.domain();
-		const midY = (Math.max(yDomain[0], yDomain[1]) - Math.min(yDomain[0], yDomain[1])) / 2;
-		const pMidY = renderingContext.valueToPixel(midY);
 
-		let pathBottom = '';
-		let pathUpper	= '';
+		const AUX = 1000;
+		const samePixelsPerSecond 	= this.oldPixelsPerSecond == renderingContext.pixelsPerSecond;
+		const sameBufferInterval  	= this.oldBufferStart == this.bufferStart(d) && this.oldBufferEnd == this.bufferEnd(d);
+		const sameWidth 			= this.oldWidth == this.width(d);
 
-		for (let i = 0; i < ORIGINSIZE; i += speed) {
-
-			let x	= (i/ORIGINSIZE) * this.width(d) / this.params.squaringFactor;
-			let px = renderingContext.timeToPixel(x);
-
-			let Y	= this.linear_interpolation(arr, i);
-
-			let yU	= (Math.abs(Y) / 2) + midY;
-			let pyU = renderingContext.valueToPixel(yU);
-			pathUpper	+= `${px},${pyU}L`;
-
-			let yB	= (-Math.abs(Y) / 2) + midY;
-			let pyB = renderingContext.valueToPixel(yB);
-			pathBottom += `${px},${pyB}L`;
-
+		var timeToPixel = renderingContext.timeToPixel;
+		if (this.oldPixelsPerSecond == undefined) {
+			console.log('init');
+			timeToPixel = scales.linear().domain([0,1]).range([0, AUX]);
 		}
 
-		let pWidth = renderingContext.timeToPixel(this.width(d));
-		pathBottom = 'M' + `${0},${pMidY}L` + pathBottom + `${pWidth/ this.params.squaringFactor},${pMidY}` + 'z';
-		pathUpper	= 'M' + `${0},${pMidY}L` + pathUpper	+ `${pWidth/ this.params.squaringFactor},${pMidY}` + 'z';
+		if (samePixelsPerSecond) {
+			console.log('same pixelsPerSecond');
+			return;
+		}
 
-		this.$waveform.data(pathUpper + pathBottom).cache();
-		// TODO
+		if (sameBufferInterval) {
+			const s = (this.oldW != undefined)? this.width(d)/this.oldW : 1;
+			this.$waveform.scaleX(s * renderingContext.pixelsPerSecond / this.oldPixelsPerSecond);
+			console.log('same buffer interval ' + this.oldPixelsPerSecond);
+			return;
+		}
+
+
+
+		this.oldPixelsPerSecond = renderingContext.pixelsPerSecond;
+		this.oldBufferStart = this.bufferStart(d);
+		this.oldBufferEnd = this.bufferEnd(d);
+		this.oldWidth = this.width(d);
+
+		if (samePixelsPerSecond && sameBufferInterval && sameWidth)
+			return;
+
+
+		// this.$waveform.clearCache();
+
+		// define nbr of samples per pixels
+		const numberOfSamples = this.bufferEnd(d) - this.bufferStart(d);
+		const numberOfPixels = Math.ceil(renderingContext.timeToPixel(this.width(d)));
+		const samplesPerPixel = numberOfSamples / numberOfPixels;
+
+		const ORIGINSIZE = numberOfPixels;
+		const WANTEDSIZE = (this.params.waveformQuality < ORIGINSIZE)? this.params.waveformQuality : ORIGINSIZE;
+		const speed = ORIGINSIZE / WANTEDSIZE;
+
+		if (!samplesPerPixel || this.data(d).length < samplesPerPixel) { return; }
+
+		// get min/max per pixels, clamped to the visible area
+		const invert = renderingContext.timeToPixel.invert;
+		const valueToPixel = renderingContext.valueToPixel;
+		const sampleRate = this.sampleRate(d);
+		if (this.instructions == undefined)
+			this.instructions = new Array(50);
+		this.instructions.length = ORIGINSIZE;
+		const MID = valueToPixel((renderingContext.valueToPixel.domain()[1] - valueToPixel.domain()[0]) / 2)
+		var counter = 0;
+
+		for (var px = 0; px < ORIGINSIZE; px+=speed) {
+			const startSample = this.bufferStart(d) + samplesPerPixel * px;
+			const extract = this.data(d).subarray(startSample, startSample + samplesPerPixel);
+
+			let min = Infinity;
+			let max = -Infinity;
+
+			for (let j = 0, l = extract.length; j < l; j++) {
+				let sample = extract[j];
+				if (sample < min) { min = sample; }
+				if (sample > max) { max = sample; }
+			}
+			// disallow Infinity
+			min = !isFinite(min) ? 0 : min;
+			max = !isFinite(max) ? 0 : max;
+			if (min === 0 && max === 0) { continue; }
+
+			let y1 = Math.round(renderingContext.valueToPixel(min));
+			let y2 = Math.round(renderingContext.valueToPixel(max));
+
+			this.instructions[counter++] = (`${px},${y1-MID}L${px},${y2-MID}`);
+		}
+		this.instructions.length = counter;
+
+		this.$waveform.data('M' + `${0},${MID}L` + this.instructions.join('L') + `L${px},${MID}` + 'z');
+
+
+
+		this.oldBufferStart = this.bufferStart(d);
+		this.oldBufferEnd = this.bufferEnd(d);
+		if (this.oldPixelsPerSecond == undefined) {
+			this.$waveform.scaleX(renderingContext.pixelsPerSecond / AUX);
+			this.oldPixelsPerSecond = AUX;
+		} else {
+			this.oldPixelsPerSecond = renderingContext.pixelsPerSecond; 
+		}
+
+
+
+		// this.$waveform.cache();
 	}
 
 	inArea(renderingContext, datum, x1, y1, x2, y2) {

@@ -1,6 +1,5 @@
 'use strict'
 
-
 class Timeline extends events.EventEmitter {
   /**
    * @param {Number} [pixelsPerSecond=100] - the default scaling between time and pixels.

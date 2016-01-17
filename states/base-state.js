@@ -1,5 +1,4 @@
 'use strict'
-
 /**
  * `State` instances are used to define the application logic by precising
  * specific user interaction cases, and how they impact the overal temporal
