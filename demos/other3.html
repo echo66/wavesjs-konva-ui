@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="http://localhost/timbre.js/timbre.dev.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/src/extras/MoogFF.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/jquery.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/codemirror.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/javascript.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/xml.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/htmlmixed.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/subcollider.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/common.js"></script>
+
+	<script type="text/javascript" src="http://localhost/OLA-TS.js/cbuffer.js"></script>
+    <script type="text/javascript" src="http://localhost/OLA-TS.js/OLA.js"></script>
+    <script type="text/javascript" src="http://localhost/bpm-timeline.js/bpm-timeline.js"></script>
+    <script type="text/javascript" src="http://localhost/SegmentSequencer.js/silence-segment.js"></script>
+    <script type="text/javascript" src="http://localhost/SegmentSequencer.js/simple-buffer-segment.js"></script>
+    <script type="text/javascript" src="http://localhost/SegmentSequencer.js/beat-grid-segment-v3.js"></script>
+    <script type="text/javascript" src="http://localhost/beat-grid.js/beat-grid.js"></script>
+    <script type="text/javascript" src="http://localhost/OLA-TS.js/SegmentsSequencer.js"></script>
+    <script type="text/javascript" src="http://localhost/OLA-TS.js/utils.js"></script>
+    <script type="text/javascript" src="http://localhost/web-audio-automation-timeline/build/automation-timeline.js"></script>
+    <script type="text/javascript" src="http://localhost/timbre.js/timbre.js-extras/audio-param.js"></script>
+    <script type="text/javascript" src="http://localhost/timbre.js/timbre.js-extras/bit-crusher.js"></script>
+    <script type="text/javascript" src="http://localhost/timbre.js/timbre.js-extras/track.js"></script>
+    <script type="text/javascript" src="http://localhost/timbre.js/timbre.js-extras/tracks-board.js"></script>
+
+
+	<script type="text/javascript" src="konva.js"></script>
+
+	<script type="text/javascript" src="../src/utils/scales.js"></script>
+	<script type="text/javascript" src="../src/utils/events.js"></script>
+	<script type="text/javascript" src="../src/utils/format.js"></script>
+
+	<script type="text/javascript" src="../src/interactions/wave-event.js"></script>
+	<script type="text/javascript" src="../src/interactions/konva-wave-event.js"></script>
+	<script type="text/javascript" src="../src/interactions/event-source.js"></script>
+	<script type="text/javascript" src="../src/interactions/keyboard.js"></script>
+	<script type="text/javascript" src="../src/interactions/konva-surface.js"></script>
+
+	<script type="text/javascript" src="../src/core/layer.js"></script>
+	<script type="text/javascript" src="../src/core/track.js"></script>
+	<script type="text/javascript" src="../src/core/track-collection.js"></script>
+	<script type="text/javascript" src="../src/core/timeline.js"></script>
+	<script type="text/javascript" src="../src/core/timeline-time-context.js"></script>
+	<script type="text/javascript" src="../src/core/layer-time-context.js"></script>
+
+	<script type="text/javascript" src="../src/behaviors/base-behavior.js"></script>
+	<script type="text/javascript" src="../src/behaviors/time-context-behavior.js"></script>
+	<script type="text/javascript" src="../src/behaviors/breakpoint-behavior.js"></script>
+	<script type="text/javascript" src="../src/behaviors/segment-behavior.js"></script>
+	<script type="text/javascript" src="../src/behaviors/scroll-segment-behavior.js"></script>
+	<script type="text/javascript" src="../src/behaviors/simple-snap-segment-behavior.js"></script>
+	<script type="text/javascript" src="../src/behaviors/marker-behavior.js"></script>
+	<script type="text/javascript" src="../src/behaviors/trace-behavior.js"></script>
+	<script type="text/javascript" src="../src/behaviors/waveform-behavior.js"></script>
+
+	<script type="text/javascript" src="../src/states/base-state.js"></script>
+	<script type="text/javascript" src="../src/states/breakpoint-state.js"></script>
+	<script type="text/javascript" src="../src/states/selection-state.js"></script>
+	<script type="text/javascript" src="../src/states/horizontal-selection-state.js"></script>
+	<script type="text/javascript" src="../src/states/brush-zoom-state.js"></script>
+	<script type="text/javascript" src="../src/states/centered-zoom-state.js"></script>
+	<script type="text/javascript" src="../src/states/centered-scroll-state.js"></script>
+	<script type="text/javascript" src="../src/states/simple-edition-state.js"></script>
+	<script type="text/javascript" src="../src/states/edition-state.js"></script>
+	<script type="text/javascript" src="../src/states/context-edition-state.js"></script>
+	<script type="text/javascript" src="../src/states/drop-and-add-state.js"></script>
+
+	<script type="text/javascript" src="../src/shapes/base-shape.js"></script>
+	<script type="text/javascript" src="../src/shapes/marker.js"></script>
+	<script type="text/javascript" src="../src/shapes/segment.js"></script>
+	<script type="text/javascript" src="../src/shapes/annotated-segment.js"></script>
+	<script type="text/javascript" src="../src/shapes/dot.js"></script>
+	<script type="text/javascript" src="../src/shapes/line.js"></script>
+	<script type="text/javascript" src="../src/shapes/waveform.js"></script>
+	<script type="text/javascript" src="../src/shapes/ticks.js"></script>
+	<script type="text/javascript" src="../src/shapes/trace-dots.js"></script>
+	<script type="text/javascript" src="../src/shapes/trace-path.js"></script>
+
+	<script type="text/javascript" src="../src/axis/axis-layer.js"></script>
+	<script type="text/javascript" src="../src/axis/grid-axis-generator.js"></script>
+	<script type="text/javascript" src="../src/axis/time-axis-generator.js"></script>
+
+	<script type="text/javascript" src="../src/helpers/scroller.js"></script>
+
+	<script type="text/javascript" src="http://localhost/ui-current/examples/assets/waves-loaders.min.js"></script>
+
+
+</head>
+<body>
+	<div id="master" style="">
+		
+	</div>
+	<div id="other">
+    	<img id="img1" src="http://static.tumblr.com/vcbmwcj/foumiteqs/arrow_up_alt1.svg" draggable="true" onmousedown="get_pos(event)" ondragstart="drag(event)"/>
+    	<div id="s1" class="seg" data-x="0.5" data-width="0.5" data-color="yellow" draggable="true" onmousedown="get_pos(event)" ondragstart="drag(event)">segment1</div>
+    	<div id="s2" class="seg" data-x="0.1" data-width="2" data-color="red" draggable="true" onmousedown="get_pos(event)" ondragstart="drag(event)">segment2</div>
+    	<div id="s3" class="seg" data-x="1" data-width="1" data-color="green" draggable="true" onmousedown="get_pos(event)" ondragstart="drag(event)">segment3</div>
+    	<div id="s4" class="seg" data-x="1" data-width="10" data-color="blue" draggable="true" onmousedown="get_pos(event)" ondragstart="drag(event)">segment4</div>
+    	<div id="s5" class="seg" data-x="3" data-width="1" data-color="cyan" draggable="true" onmousedown="get_pos(event)" ondragstart="drag(event)">segment5</div>
+    </div>
+
+    <script type="text/javascript">
+    	s1.getDatum = () => { return { x: s1.dataset.x, width: s1.dataset.width, color: s1.dataset.color} }
+    	s2.getDatum = () => { return { x: s2.dataset.x, width: s2.dataset.width, color: s2.dataset.color} }
+    	s3.getDatum = () => { return { x: s3.dataset.x, width: s3.dataset.width, color: s3.dataset.color} }
+    	s4.getDatum = () => { return { x: s4.dataset.x, width: s4.dataset.width, color: s4.dataset.color} }
+    	s5.getDatum = () => { return { x: s5.dataset.x, width: s5.dataset.width, color: s5.dataset.color} }
+
+
+    	function init() {
+		    var canvas = document.getElementById("graphCanvas");
+		    var context = canvas.getContext("2d");
+		    
+		    context.lineWidth = 2;
+		}
+		var pos;
+		function allowDrop(ev) {
+		    ev.preventDefault();
+		}
+		function get_pos(ev){
+		    pos = [ev.pageX, ev.pageY];
+		}
+		function drag(ev) {
+			// console.log(ev);
+			ev.dataTransfer.setData("Text", ev.target.id);
+			// var img = new Image(); 
+			// img.src = 'http://static.tumblr.com/vcbmwcj/foumiteqs/arrow_up_alt1.svg'; 
+			// ev.dataTransfer.setDragImage(img, 10, 10);
+			// ev.dataTransfer.setData('Text', JSON.stringify({a:1}))
+		}
+
+		function drop(ev) {
+		    ev.preventDefault();
+
+		    var data = ev.dataTransfer.getData("Text");
+		    ev.dataTransfer.clearData();
+		    
+		    var img = canvas = document.getElementById("img1");
+		    var dx = pos[0] - img.offsetLeft;
+		    var dy = pos[1] - img.offsetTop;
+		 document.getElementById("graphCanvas").getContext("2d").drawImage(document.getElementById(data), ev.pageX - dx, ev.pageY - dy);
+		}
+    </script>
+</body>
+</html>

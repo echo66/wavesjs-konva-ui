@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="http://localhost/timbre.js/timbre.dev.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/src/extras/MoogFF.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/jquery.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/codemirror.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/javascript.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/xml.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/htmlmixed.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/subcollider.js"></script>
+	<script src="https://mohayonao.github.io/timbre.js/misc/js/common.js"></script>
+
+	<script type="text/javascript" src="http://localhost/OLA-TS.js/cbuffer.js"></script>
+    <script type="text/javascript" src="http://localhost/OLA-TS.js/OLA.js"></script>
+    <script type="text/javascript" src="http://localhost/bpm-timeline.js/bpm-timeline.js"></script>
+    <script type="text/javascript" src="http://localhost/SegmentSequencer.js/silence-segment.js"></script>
+    <script type="text/javascript" src="http://localhost/SegmentSequencer.js/simple-buffer-segment.js"></script>
+    <script type="text/javascript" src="http://localhost/SegmentSequencer.js/beat-grid-segment-v3.js"></script>
+    <script type="text/javascript" src="http://localhost/beat-grid.js/beat-grid.js"></script>
+    <script type="text/javascript" src="http://localhost/OLA-TS.js/SegmentsSequencer.js"></script>
+    <script type="text/javascript" src="http://localhost/OLA-TS.js/utils.js"></script>
+    <script type="text/javascript" src="http://localhost/web-audio-automation-timeline/build/automation-timeline.js"></script>
+    <script type="text/javascript" src="http://localhost/timbre.js/timbre.js-extras/audio-param.js"></script>
+    <script type="text/javascript" src="http://localhost/timbre.js/timbre.js-extras/bit-crusher.js"></script>
+    <script type="text/javascript" src="http://localhost/timbre.js/timbre.js-extras/track.js"></script>
+    <script type="text/javascript" src="http://localhost/timbre.js/timbre.js-extras/tracks-board.js"></script>
+
+
+	<script type="text/javascript" src="konva.js"></script>
+
+	<script type="text/javascript" src="utils/scales.js"></script>
+	<script type="text/javascript" src="utils/events.js"></script>
+	<script type="text/javascript" src="utils/format.js"></script>
+
+	<script type="text/javascript" src="interactions/wave-event.js"></script>
+	<script type="text/javascript" src="interactions/konva-wave-event.js"></script>
+	<script type="text/javascript" src="interactions/event-source.js"></script>
+	<script type="text/javascript" src="interactions/keyboard.js"></script>
+	<script type="text/javascript" src="interactions/konva-surface.js"></script>
+
+	<script type="text/javascript" src="core/layer.js"></script>
+	<script type="text/javascript" src="core/track.js"></script>
+	<script type="text/javascript" src="core/track-collection.js"></script>
+	<script type="text/javascript" src="core/timeline.js"></script>
+	<script type="text/javascript" src="core/timeline-time-context.js"></script>
+	<script type="text/javascript" src="core/layer-time-context.js"></script>
+
+	<script type="text/javascript" src="behaviors/base-behavior.js"></script>
+	<script type="text/javascript" src="behaviors/time-context-behavior.js"></script>
+	<script type="text/javascript" src="behaviors/breakpoint-behavior.js"></script>
+	<script type="text/javascript" src="behaviors/segment-behavior.js"></script>
+	<script type="text/javascript" src="behaviors/simple-snap-segment-behavior.js"></script>
+	<script type="text/javascript" src="behaviors/marker-behavior.js"></script>
+	<script type="text/javascript" src="behaviors/trace-behavior.js"></script>
+	<script type="text/javascript" src="behaviors/waveform-behavior.js"></script>
+
+	<script type="text/javascript" src="states/base-state.js"></script>
+	<script type="text/javascript" src="states/breakpoint-state.js"></script>
+	<script type="text/javascript" src="states/selection-state.js"></script>
+	<script type="text/javascript" src="states/horizontal-selection-state.js"></script>
+	<script type="text/javascript" src="states/brush-zoom-state.js"></script>
+	<script type="text/javascript" src="states/centered-zoom-state.js"></script>
+	<script type="text/javascript" src="states/centered-scroll-state.js"></script>
+	<script type="text/javascript" src="states/simple-edition-state.js"></script>
+	<script type="text/javascript" src="states/edition-state.js"></script>
+	<script type="text/javascript" src="states/context-edition-state.js"></script>
+
+	<script type="text/javascript" src="shapes/base-shape.js"></script>
+	<script type="text/javascript" src="shapes/marker.js"></script>
+	<script type="text/javascript" src="shapes/segment.js"></script>
+	<script type="text/javascript" src="shapes/annotated-segment.js"></script>
+	<script type="text/javascript" src="shapes/dot.js"></script>
+	<script type="text/javascript" src="shapes/line.js"></script>
+	<script type="text/javascript" src="shapes/waveform.js"></script>
+	<script type="text/javascript" src="shapes/ticks.js"></script>
+	<script type="text/javascript" src="shapes/trace-dots.js"></script>
+	<script type="text/javascript" src="shapes/trace-path.js"></script>
+
+	<script type="text/javascript" src="axis/axis-layer.js"></script>
+	<script type="text/javascript" src="axis/grid-axis-generator.js"></script>
+	<script type="text/javascript" src="axis/time-axis-generator.js"></script>
+
+	<script type="text/javascript" src="http://localhost/ui-current/examples/assets/waves-loaders.min.js"></script>
+
+
+</head>
+<body>
+	<div id="master" style="overflow: scroll;">
+		<div id="container" style="width: 10000px;"></div>
+	</div>
+
+	
+	
+
+</body>
+</html>
