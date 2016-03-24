@@ -1,4 +1,5 @@
 'use strict';
+import events from 'events';
 import Timeline from '../core/timeline';
 import Track from '../core/track';
 import Layer from '../core/layer';
@@ -8,8 +9,9 @@ import Segment from '../shapes/segment';
 import SimpleEditionState from '../states/simple-edition-state';
 
 
-export default class Scroller {
+export default class Scroller extends events.EventEmitter {
 	constructor($el, targetTimeline, pixelsPerSecond, width, height) {
+		super();
 		this.auxTimeline = new Timeline(pixelsPerSecond, width);
 		var t = document.createElement('div');
 		t.classList.add("scroll-div");
@@ -56,6 +58,9 @@ export default class Scroller {
 
 				that.auxScrollLayer.edit([that.scrollDatum], dx, 0, shape.$segment);
 				that.auxTimeline.tracks.update();
+				that.emit('drag');
+			} else if (e.type == 'mousemove') {
+				that.emit('drag');
 			}
 		});
 	}

@@ -23,6 +23,8 @@ export default class Keyboard extends EventSource {
     this.sourceName = 'keyboard';
 
     Keyboard._instance = this;
+
+    this._beingPressed = new Set();
   }
 
   _createEvent(type, e) {
@@ -32,6 +34,8 @@ export default class Keyboard extends EventSource {
     event.ctrlKey = e.ctrlKey;
     event.altKey = e.altKey;
     event.metaKey = e.metaKey;
+
+    event.keyCode = e.keyCode;
     event.char = String.fromCharCode(e.keyCode);
 
     return event;
@@ -39,13 +43,21 @@ export default class Keyboard extends EventSource {
 
   _bindEvents() {
     const onKeyDown = (e) => {
-      let event = this._createEvent('keydown', e);
-      this.emit('event', event);
+      if (!this._beingPressed.has(e.keyCode)) {
+        let event = this._createEvent('keydown', e);
+        this.emit('event', event);
+        this._beingPressed.add(e.keyCode);
+      }
     };
 
     const onKeyUp = (e) => {
-      let event = this._createEvent('keyup', e);
-      this.emit('event', event);
+      let event1 = this._createEvent('keyup', e);
+      this.emit('event', event1);
+
+      let event2 = this._createEvent('keypress', e);
+      this.emit('event', event2);
+
+      this._beingPressed.delete(e.keyCode);
     };
 
     this.$el.addEventListener('keydown', onKeyDown, false);

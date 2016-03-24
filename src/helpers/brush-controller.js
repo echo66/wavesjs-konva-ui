@@ -3,31 +3,42 @@ import Konva from 'konva';
 
 export default class BrushController {
 	constructor(track, style) {
+		if (style === undefined) 
+			style = {};
 		this.track = track;
 		this.innerColor = style.innerColor || '#686868';
 		this.opacity = style.opacity || 0.5;
 	}
 
-	
+	get brushArea() {
+		const $brush = this.track.$brush;
+
+		return {
+			x: $brush.x(), 
+			y: $brush.y(), 
+			width: $brush.width(), 
+			height: $brush.height()
+		};
+	}
 
 	set opacity(value) {
-		this.innerColor = value;
+		this._opacity = value;
 		if (this.track.$brush)
-			this.track.$brush.opacity(this.opacity);
+			this.track.$brush.opacity(this._opacity);
 	}
 
 	get opacity() {
-		return this.opacity;
+		return this._opacity;
 	}
 
 	set innerColor(value) {
-		this.innerColor = value;
+		this._innerColor = value;
 		if (this.track.$brush)
-			this.track.$brush.fill(this.innerColor);
+			this.track.$brush.fill(this._innerColor);
 	}
 
 	get innerColor() {
-		return this.innerColor;
+		return this._innerColor;
 	}
 
 
@@ -49,7 +60,7 @@ export default class BrushController {
 	removeBrush() {
 		if (this.track.$brush === undefined) return; 
 
-		this._resetBrush(this.track);
+		this.resetBrush();
 
 		this.track.$brush.destroy();
 
@@ -65,7 +76,7 @@ export default class BrushController {
 		this.track.$interactionsLayer.batchDraw();
 	}
 
-	updateBrush(e, track) {
+	updateBrush(e) {
 		const $brush = this.track.$brush;
 
 		$brush.x(e.area.left).y(0).width(e.area.width).height(this.track.height);

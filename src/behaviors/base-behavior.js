@@ -74,6 +74,7 @@ export default class BaseBehavior {
   select(datum) {
     // $item.classList.add(this.selectedClass);
     this._selectedDatums.add(datum);
+    return true;
   }
 
   /**
@@ -83,6 +84,7 @@ export default class BaseBehavior {
   unselect(datum) {
     // $item.classList.remove(this.selectedClass);
     this._selectedDatums.delete(datum);
+    return true;
   }
 
   /**
@@ -91,7 +93,7 @@ export default class BaseBehavior {
    */
   toggleSelection(datum) {
     const method = this._selectedDatums.has(datum) ? 'unselect' : 'select';
-    this[method](datum);
+    return this[method](datum);
   }
 
   /**
@@ -107,6 +109,7 @@ export default class BaseBehavior {
    */
   edit(renderingContext, shape, datum, dx, dy, $target) {
     // must be implemented in children
+    return false;
   }
 
   /**
@@ -119,21 +122,11 @@ export default class BaseBehavior {
   /**
    * TODO
    */
-  create(datum) { }
+  minimize() { return false; }
 
   /**
    * TODO
    */
-  remove(datum) { }
-
-  /**
-   * TODO
-   */
-  minimize() { }
-
-  /**
-   * TODO
-   */
-  highlight(datum, isHighlighted) { }
+  highlight(datum, isHighlighted) { return false; }
 
 }

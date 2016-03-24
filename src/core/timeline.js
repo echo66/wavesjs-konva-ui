@@ -322,13 +322,14 @@ export default class Timeline extends events.EventEmitter {
   remove(track) {
     const index = this.tracks.indexOf(track);
     var trackId;
-    if (this.tracks.indexOf(track) !== -1) {
+    if (index !== -1) {
       track.destroy();
       delete this._trackById[track.id];
       trackId = track.id;
       track.id = null;
+      this.tracks.splice(index, 1);
+      this.emit('remove', track, trackId);
     }
-    this.emit('remove', track, trackId);
   }
 
   /**

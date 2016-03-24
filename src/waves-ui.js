@@ -16,6 +16,7 @@ import TimeContextBehavior from './behaviors/time-context-behavior';
 import TraceBehavior from './behaviors/trace-behavior';
 import WaveformBehavior from './behaviors/waveform-behavior';
 import NoBehavior from './behaviors/no-behavior';
+import NoHorizontalOverlappingSegmentsBehavior from './behaviors/no-horizontal-overlapping-segments-behavior';
 
 // core
 import LayerTimeContext from './core/layer-time-context';
@@ -39,6 +40,8 @@ import TraceLayer from './helpers/trace-layer';
 import WaveformLayer from './helpers/waveform-layer';
 import BeatGridLayer from './helpers/beat-grid-layer';
 import Scroller from './helpers/scroller';
+import BeatGridAxisLayer from './helpers/beat-grid-axis-layer';
+import BrushController from './helpers/brush-controller';
 
 // interactions
 import EventSource from './interactions/event-source';
@@ -74,6 +77,7 @@ import HorizontalSelectionState from './states/horizontal-selection-state';
 import SelectionState from './states/selection-state';
 import ShapeInsertionState from './states/shape-insertion-state';
 import SimpleEditionState from './states/simple-edition-state';
+import DragToCreateIntervalState from './states/drag-to-create-interval-state';
 // import BeatGridEditorInteractionsState from './states/beat-grid-interactions-state';
 
 
@@ -94,7 +98,7 @@ export default {
     ScrollSegmentBehavior, SegmentBehavior, 
     SiblingLockedSegmentBehavior, SimpleSnapSegmentBehavior, 
     TimeContextBehavior, TraceBehavior, WaveformBehavior, 
-    NoBehavior 
+    NoBehavior, NoHorizontalOverlappingSegmentsBehavior
   }, 
 
   core: {
@@ -103,6 +107,7 @@ export default {
   }, 
 
   helpers: {
+    BeatGridAxisLayer, 
     AnnotatedMarkerLayer, 
     AnnotatedSegmentLayer, 
     BreakpointLayer, 
@@ -116,6 +121,7 @@ export default {
     WaveformLayer, 
     BeatGridLayer, 
     Scroller, 
+    BrushController
   },
 
   interactions: {
@@ -134,6 +140,7 @@ export default {
     BaseState, BreakpointState, BrushZoomState, CenteredZoomState, 
     CenteredScrollState, ContextEditionState, DropAndAddState, EditionState, 
     SelectionState, HorizontalSelectionState, ShapeInsertionState, SimpleEditionState, 
+    DragToCreateIntervalState
   },
 
   utils: {

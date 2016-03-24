@@ -84,6 +84,7 @@ export default class Layer extends events.EventEmitter {
 		for (var i=0; i<this._contextShape.$el.length; i++) {
 			this._contextLayer.add(this._contextShape.$el[i]);
 		}
+		this._contextShape.$el.forEach((ks) => { ks.shape = this._contextShape; });
 
 		this._stage = null;
 	}
@@ -92,11 +93,15 @@ export default class Layer extends events.EventEmitter {
 		return this._dragLayer.visible();
 	}
 
-	set visible(value) {
-		this._contextLayer.visible(value);
-		this._commonShapeLayer.visible(value);
-		this._dragLayer.visible(value);
-		this.contentLayer.forEach((l) => l.visible(value));
+	set visible(visible) {
+		this._contextLayer.visible(visible);
+		this._commonShapeLayer.visible(visible);
+		this._dragLayer.visible(visible);
+		this.contentLayers.forEach((l) => l.visible(visible));
+		if (!this._visible && visible) {
+			this._visible = visible;
+			this.updateShapes();
+		}
 	}
 
 	get zIndex() {
@@ -117,13 +122,14 @@ export default class Layer extends events.EventEmitter {
 		while (!entry.done) {
 			var layer = entry.value;
 			layer.destroy();
+			entry = it.next();
 		}
 	}
 
 	destroy() {
 		this._contextShape.destroy();
 		this._destroy(this._$datumToShape.values());
-		this._destroy(this.contentLayers.values);
+		this._destroy(this.contentLayers.values());
 		this.contentLayers.clear();
 
 		this._commonShapeLayer = null;
@@ -327,7 +333,9 @@ export default class Layer extends events.EventEmitter {
 				this._toFront(datum);
 				that.emit('select', datum);
 			} else {
-				throw new Error('No shape for this datum in this layer', { datum: datum, layer: that });
+				that._add(datum);
+				this._behavior.select(datum);
+				// throw new Error('No shape for this datum in this layer', { datum: datum, layer: that });
 			}
 		});
 
@@ -347,7 +355,8 @@ export default class Layer extends events.EventEmitter {
 				this._behavior.unselect(datum);
 				that.emit('unselect', datum);
 			} else {
-				throw new Error('No shape for this datum in this layer', { datum: datum, layer: that });
+				that._add(datum);
+				this._behavior.unselect(datum);
 			}
 		});
 
@@ -355,30 +364,30 @@ export default class Layer extends events.EventEmitter {
 	}
 
 	_toFront($datum) {
-		const $shape = this._$datumToShape.get($datum);
-		if ($shape) {
-			if ($shape.$el instanceof Array || $shape.$el instanceof Set) {
-				$shape.$el.forEach((el) => el.moveToTop());
-			} else {
-				$shape.$el.moveToTop();
-			}
+		let $shape = this._$datumToShape.get($datum);
+		if (!$shape) {
+			this._add($datum);
+			$shape = this._$datumToShape.get($datum);
+		}
+		if ($shape.$el instanceof Array || $shape.$el instanceof Set) {
+			$shape.$el.forEach((el) => el.moveToTop());
 		} else {
-			throw new Error('No shape for this datum in this layer', { datum: $datum, layer: this });
+			$shape.$el.moveToTop();
 		}
 	}
 
 	toDragLayer($datums) {
 		const that = this;
 		$datums.forEach(($datum) => {
-			const $shape = this._$datumToShape.get($datum);
-			if ($shape) {
-				if ($shape.$el instanceof Array || $shape.$el instanceof Set) {
-					$shape.$el.forEach((el) => that._dragLayer.add(el));
-				} else {
-					this._dragLayer.add($shape.$el);
-				}
+			let $shape = this._$datumToShape.get($datum);
+			if (!$shape) {
+				that._add($datum);
+				$shape = this._$datumToShape.get($datum);
+			}
+			if ($shape.$el instanceof Array || $shape.$el instanceof Set) {
+				$shape.$el.forEach((el) => that._dragLayer.add(el));
 			} else {
-				throw new Error('No shape for this datum in this layer', { datum: $datum, layer: that });
+				this._dragLayer.add($shape.$el);
 			}
 		});
 	}
@@ -390,13 +399,13 @@ export default class Layer extends events.EventEmitter {
 
 		// TODO: use the this._behavior.can method.
 		$datums.forEach((datum) => {
-			const shape = that._$datumToShape.get(datum);
-			if (shape) {
-				this._behavior.toggleSelection(datum);
-				that.emit('toggle-select', datum);
-			} else {
-				throw new Error('No shape for this datum in this layer', { datum: datum, layer: that });
+			let shape = that._$datumToShape.get(datum);
+			if (!shape) {
+				that._add(datum);
+				shape = this._$datumToShape.get(datum);
 			}
+			this._behavior.toggleSelection(datum);
+			that.emit('toggle-select', datum);
 		});
 	}
 
@@ -551,11 +560,16 @@ export default class Layer extends events.EventEmitter {
 		return $filteredDatums;
 	}
 
+	getDatumsInInterval(start, duration) {
+		throw new Error('The developer must assign a proper function');
+	}
+
 	update($datums) {
 
 		this.updateContainer();
 
-		this.updateShapes($datums);
+		if (this.visible)
+			this.updateShapes($datums);
 		
 	}
 
@@ -660,7 +674,7 @@ export default class Layer extends events.EventEmitter {
 
 
 	allocateShapesToContentLayers(stage, objs, type, eraseChildren) {
-		const LIMIT = 30; // TODO: make the LIMIT a dynamic variable, controlled by a user defined function.
+		const LIMIT = Infinity; // TODO: make the LIMIT a dynamic variable, controlled by a user defined function.
 
 		const changedContentLayers = new Set();
 
@@ -810,14 +824,14 @@ export default class Layer extends events.EventEmitter {
 	remove(datum) {
 		if (!this._behavior || !this._behavior.can('remove', [datum])) return false;
 
-		this.unselect(datum);
+		this.unselect([datum]);
 		const shape = this._$datumToShape.get(datum);
 		if (shape) {
 			const changedContentLayers = new Set();
 			if (shape.$el instanceof Array || shape.$el instanceof Set) {
-				shape.$el.forEach((el) => changedContentLayers.add(el));
+				shape.$el.forEach((el) => changedContentLayers.add(el.getParent()));
 			} else {
-				changedContentLayers.add(shape.$el);
+				changedContentLayers.add(shape.$el.getParent());
 			}
 			shape.layer = null;
 			shape.destroy();
@@ -825,10 +839,13 @@ export default class Layer extends events.EventEmitter {
 			this._$shapeToDatum.delete(shape);
 
 			changedContentLayers.forEach((layer) => {
-				if (layer.children === 0) {
-					layer.destroy();
-					this.contentLayers.delete(layer);
-				}
+				if (layer !== undefined) 
+					if (layer.children === 0) {
+						layer.destroy();
+						this.contentLayers.delete(layer);
+					} else {
+						layer.batchDraw(); // a little hack..
+					}
 			});
 		}
 
@@ -901,6 +918,36 @@ export default class Layer extends events.EventEmitter {
 
 	minimize() {
 		// TODO
+	}
+
+
+
+	find_index(values, target, compareFn) {
+		if (values.length === 0 || compareFn(target, values[0]) < 0) { 
+			return [undefined, 0]; 
+		}
+		if (compareFn(target, values[values.length-1]) > 0 ) {
+			return [values.length-1, undefined];
+		}
+		return this.modified_binary_search(values, 0, values.length - 1, target, compareFn);
+	}
+
+	modified_binary_search(values, start, end, target, compareFn) {
+		// if the target is bigger than the last of the provided values.
+		if (start > end) { return [end]; } 
+
+		var middle = Math.floor((start + end) / 2);
+		var middleValue = values[middle];
+
+		if (compareFn(middleValue, target) < 0 && values[middle+1] && compareFn(values[middle+1], target) > 0)
+			// if the target is in between the two halfs.
+			return [middle, middle+1];
+		else if (compareFn(middleValue, target) > 0)
+			return this.modified_binary_search(values, start, middle-1, target, compareFn); 
+		else if (compareFn(middleValue, target) < 0)
+			return this.modified_binary_search(values, middle+1, end, target, compareFn); 
+		else 
+			return [middle]; //found!
 	}
 
 }

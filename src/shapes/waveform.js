@@ -32,7 +32,16 @@ export default class Waveform extends BaseShape {
 	_getAccessorList() {
 		// return { y: 0 };
 		// TODO: delete all but sampleRate.
-		return { data: [], x: 0, width: 10000, bufferStart: 0, bufferEnd: 0, sampleRate: 44100, color: 'black', text: "" };
+		return { 
+			data: [], 
+			x: 0, 
+			width: 10000, 
+			bufferStart: 0, 
+			bufferEnd: 0, 
+			sampleRate: 44100, 
+			color: 'black', 
+			text: "" 
+		};
 	}
 
 	_getDefaults() {
@@ -129,9 +138,6 @@ export default class Waveform extends BaseShape {
 		var height = renderingContext.height;
 		var color = this.params.waveform.color;
 
-		for (var i in this.$el) {
-			this.$el[i].x(x).y(0);
-		}
 		this.$el.forEach((el) => el.x(x).y(0));
 
 		this.$label.text(this.text(d)).x(x+10).y(5);

@@ -40,6 +40,7 @@ export default class AxisLayer extends Layer {
     for (var i=0; i<this._contextShape.$el.length; i++) {
       this._contextLayer.add(this._contextShape.$el[i]);
     }
+    this._contextShape.$el.forEach((ks) => { ks.shape = this._contextShape; });
 
     this.setBehavior(new BaseBehavior());
   }

@@ -127,6 +127,11 @@ export default class HorizontalSelectionState extends BaseState {
     this.wasMoving = true;
 
     e.area = {left: e.area.left, width:e.area.width, top: 0, height: this._currentTrack.height };
+
+    let iStart = -this.timeline.offset + this.timeline.timeToPixel.invert(e.area.left);
+    let iDuration = -this.timeline.offset + this.timeline.timeToPixel.invert(e.area.left + e.area.width) - iStart;
+    let interval = { start: iStart, duration: iDuration };
+    // console.log(interval);
     
     this._updateBrush(e, this._currentTrack);
 
@@ -134,7 +139,7 @@ export default class HorizontalSelectionState extends BaseState {
 
     this._currentTrack.layers.forEach((layer) => {
       const currentSelection = layer.selectedDatums;
-      const datumsInArea = layer.getDatumsInArea(e.area);
+      const datumsInInterval = layer.getDatumsInInterval(iStart, iDuration);
 
       var toSelect;
       var toUnselect;
@@ -143,7 +148,7 @@ export default class HorizontalSelectionState extends BaseState {
       if (!e.originalEvent.shiftKey) {        
 
         toUnselect = new Set(currentSelection);
-        toSelect = new Set(datumsInArea);
+        toSelect = new Set(datumsInInterval);
 
       } else {
 
@@ -153,7 +158,7 @@ export default class HorizontalSelectionState extends BaseState {
         const previousSelection = this._layerSelectedItemsMap.get(layer);
         
 
-        datumsInArea.forEach((datum) => {
+        datumsInInterval.forEach((datum) => {
           if (!previousSelection.has(datum)) {
             toSelect.add(datum);
           } else {
@@ -162,13 +167,13 @@ export default class HorizontalSelectionState extends BaseState {
         });
 
         currentSelection.forEach((datum) => {
-          if (!datumsInArea.has(datum) && !previousSelection.has(datum)) {
+          if (!datumsInInterval.has(datum) && !previousSelection.has(datum)) {
             toUnselect.add(datum);
           }
         });
 
         previousSelection.forEach((datum) => {
-          if (!datumsInArea.has(datum)) {
+          if (!datumsInInterval.has(datum)) {
             toSelect.add(datum);
           }
         });
@@ -179,7 +184,7 @@ export default class HorizontalSelectionState extends BaseState {
       layer.select(toSelect);
 
       layer.updateShapes(currentSelection);
-      layer.updateShapes(datumsInArea);
+      layer.updateShapes(datumsInInterval);
     });
   }
 

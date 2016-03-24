@@ -7,6 +7,7 @@ export default class BeatGridSnapSegmentBehavior extends BaseBehavior {
   constructor(beatGrid) {
     super();
     this._beatGrid = beatGrid;
+    this._snapToGrid = true;
   }
 
   set beatGrid(value) {
@@ -15,6 +16,14 @@ export default class BeatGridSnapSegmentBehavior extends BaseBehavior {
 
   get beatGrid() {
     return this._beatGrid;
+  }
+
+  set snapToGrid(value) {
+    this._snapToGrid = value;
+  }
+
+  get snapToGrid() {
+    return this._snapToGrid;
   }
 
   edit(renderingContext, shape, datum, dx, dy, target) {
@@ -39,7 +48,7 @@ export default class BeatGridSnapSegmentBehavior extends BaseBehavior {
     const timeToPixel = renderingContext.timeToPixel;
     const layerHeight = renderingContext.height;
     // current values
-    const x = renderingContext.timeToPixel(shape.x(datum));
+    const x = renderingContext.timeToPixel(Math.max(0, shape.x(datum)));
     const y = renderingContext.valueToPixel(shape.y(datum));
     const width = renderingContext.timeToPixel(shape.width(datum));
     const height = renderingContext.valueToPixel(shape.height(datum));
@@ -54,39 +63,50 @@ export default class BeatGridSnapSegmentBehavior extends BaseBehavior {
       targetY = (layerHeight - height);
     }
 
-    const beat0 = this._beatGrid.beat(timeToPixel.invert(targetX));
-    const snapped0 = this._beatGrid.seconds(Math.round(beat0));
-    const beat1 = this._beatGrid.beat(timeToPixel.invert(targetX) + shape.width(datum));
-    const snapped1 = this._beatGrid.seconds(Math.round(beat1));
+    if (this.snapToGrid) {
+      const beat0 = this._beatGrid.beats(timeToPixel.invert(targetX));
+      const snapped0 = this._beatGrid.seconds((dx > 0)? Math.ceil(beat0): Math.floor(beat0));
+      const beat1 = this._beatGrid.beats(timeToPixel.invert(targetX) + shape.width(datum));
+      const snapped1 = this._beatGrid.seconds((dx > 0)? Math.ceil(beat1): Math.floor(beat1));
 
-    if (snapped0 !== snapped1) {
-      shape.x(datum, snapped0);
-      shape.width(datum, snapped1-snapped0);
-      shape.y(datum, renderingContext.valueToPixel.invert(targetY));
+      if (snapped0 !== snapped1) {
+        shape.x(datum, snapped0);
+        shape.width(datum, snapped1 - snapped0);
+        // shape.y(datum, renderingContext.valueToPixel.invert(targetY));
+      }
+    } else {
+      shape.x(datum, timeToPixel.invert(targetX));
     }
+    
   }
 
   _resizeLeft(renderingContext, shape, datum, dx, dy, target) {
     const timeToPixel = renderingContext.timeToPixel;
     // current values
-    const x     = timeToPixel(shape.x(datum));
+    const x     = timeToPixel(Math.max(0, shape.x(datum)));
     const width = timeToPixel(shape.width(datum));
     // target values
     let maxTargetX  = x + width;
     let targetX     = x + dx < maxTargetX ? Math.max(x + dx, 0) : x;
     let targetWidth = targetX !== 0 ? Math.max(width - dx, 1) : width;
 
+    if (this.snapToGrid) {
+      const beat0 = this._beatGrid.beats(timeToPixel.invert(targetX));
+      const snapped0 = this._beatGrid.seconds((dx > 0)? Math.ceil(beat0): Math.floor(beat0));
+      const beat1 = this._beatGrid.beats(timeToPixel.invert(targetX) + timeToPixel.invert(targetWidth));
+      const snapped1 = this._beatGrid.seconds((dx > 0)? Math.ceil(beat1): Math.floor(beat1));
 
-    const beat0 = this._beatGrid.beat(timeToPixel.invert(targetX));
-    const snapped0 = this._beatGrid.seconds(Math.round(beat0));
-    const beat1 = this._beatGrid.beat(timeToPixel.invert(targetX) + timeToPixel.invert(targetWidth));
-    const snapped1 = this._beatGrid.seconds(Math.round(beat1));
 
-
-    if (snapped0 !== snapped1) {
-      shape.x(datum, snapped0);
-      shape.width(datum, snapped1 - snapped0);
+      if (snapped0 !== snapped1) {
+        shape.x(datum, snapped0);
+        shape.width(datum, snapped1 - snapped0);
+      }
+    } else {
+      shape.x(datum, renderingContext.timeToPixel.invert(targetX));
+      shape.width(datum, renderingContext.timeToPixel.invert(targetWidth));
     }
+
+      
     
   }
 
@@ -96,11 +116,15 @@ export default class BeatGridSnapSegmentBehavior extends BaseBehavior {
     // target values
     let targetWidth = Math.max(width + dx, 1);
 
-    const beat1 = this._beatGrid.beat(shape.x(datum) + renderingContext.timeToPixel.invert(targetWidth));
-    const snapped1 = this._beatGrid.seconds(Math.round(beat1));
+    if (this.snapToGrid) {
+      const beat1 = this._beatGrid.beats(shape.x(datum) + renderingContext.timeToPixel.invert(targetWidth));
+      const snapped1 = this._beatGrid.seconds((dx > 0)? Math.ceil(beat1): Math.floor(beat1));
 
-    if (snapped1 - shape.x(datum)) {
-      shape.width(datum, snapped1 - shape.x(datum));
+      if (snapped1 - shape.x(datum)) {
+        shape.width(datum, snapped1 - shape.x(datum));
+      }
+    } else {
+      shape.width(datum, renderingContext.timeToPixel.invert(targetWidth));
     }
   }
 

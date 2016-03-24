@@ -46,8 +46,10 @@ export default class BreakpointState extends BaseState {
         const value = layer.valueToPixel.invert(e.y);
         const datum = this.datumGenerator(time, value);
 
-        layer.add(datum);
-        updatedLayer = layer;
+        if (datum) {
+          layer.add(datum);
+          updatedLayer = layer;
+        }
       } else {
         // if shift is pressed, remove the item
         if (e.originalEvent.shiftKey) {

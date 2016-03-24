@@ -63,6 +63,7 @@ export default class Track extends events.EventEmitter {
    */
   set height(value) {
     this._height = value;
+    this.$stage.height(this._height);
   }
 
   /**
@@ -110,7 +111,9 @@ export default class Track extends events.EventEmitter {
 
     this.$backgroundLayer = new Konva.Layer({});
     this.$backgroundLayer.addName('track-background');
-    this.$backgroundLayer.add(new Konva.Rect({}));
+    const bgrect = new Konva.Rect({});
+    bgrect.addName('track-background-rect');
+    this.$backgroundLayer.add(bgrect);
     // this.$backgroundLayer.children[0].shape = { layer: { track: this } }; // Shame!!! ..... Shame!!! .... Shame!!!
 
     this.$dragLayer = new Konva.Layer({});
@@ -241,8 +244,11 @@ export default class Track extends events.EventEmitter {
     if (!(layers instanceof Set) && !(layers instanceof Array)) 
       layers = [layers];
 
+    const that = this;
+
     layers.forEach((layer) => {
       if (!this.layers.has(layer)) { return; }
+      layer.params.height = that.height;
       layer.update();
     });
     this.$backgroundLayer.moveToBottom();
