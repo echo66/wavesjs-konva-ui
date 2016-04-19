@@ -6,9 +6,10 @@ import BaseState from './base-state';
  * A state to select and edit shapes in a simple way. (kind of plug n play state)
  */
 export default class SimpleEditionState extends BaseState {
-  constructor(timeline) {
+  constructor(timeline, autoUpdateShapes) {
     super(timeline);
 
+    this.autoUpdateShapes = (autoUpdateShapes === undefined)? true : autoUpdateShapes;
     this.currentEditedLayer = null;
     this.currentTarget = null;
   }
@@ -39,13 +40,15 @@ export default class SimpleEditionState extends BaseState {
 
     // keep target consistent with mouse down
     this.currentTarget = e.target;
+    const that = this;
 
     if (this.currentTarget.shape && this.currentTarget.shape.isContextShape) {
       if (!e.originalEvent.shiftKey) 
         this.timeline.getTrackFromDOMElement(e.currentTarget).layers.forEach((layer) => {
           const aux = new Set(layer.selectedDatums);
           layer.unselect(layer.selectedDatums);
-          layer.updateShapes(aux);
+          if (that.autoUpdateShapes) 
+            layer.updateShapes(aux);
         });
       return;
     } else if (!this.currentTarget.shape) {
@@ -53,7 +56,8 @@ export default class SimpleEditionState extends BaseState {
         this.timeline.getTrackFromDOMElement(e.currentTarget).layers.forEach((layer) => {
           const aux = new Set(layer.selectedDatums);
           layer.unselect(layer.selectedDatums);
-          layer.updateShapes(aux);
+          if (that.autoUpdateShapes)
+            layer.updateShapes(aux);
         });
       return;
     }
@@ -61,7 +65,6 @@ export default class SimpleEditionState extends BaseState {
     const layer = this.currentTarget.shape.layer;
 
     const a = new Set(layer.selectedDatums);
-    const that = this;
 
     if (this.currentTarget.shape.layer) {
       if (!e.originalEvent.shiftKey) {
@@ -73,13 +76,15 @@ export default class SimpleEditionState extends BaseState {
         layer.select([datum]);
         a.add(datum);
       }
-      layer.updateShapes(a);
+      if (that.autoUpdateShapes)
+        layer.updateShapes(a);
       this.currentEditedLayer.selectedDatums.forEach((datum) => {
         that.currentEditedLayer.getShapeFromDatum(datum).startDrag();
       });
     } else if (!e.originalEvent.shiftKey) {
       layer.unselect(layer.selectedDatums);
-      layer.updateShapes(a);
+      if (that.autoUpdateShapes)
+        layer.updateShapes(a);
       this.currentEditedLayer.selectedDatums.forEach((datum) => {
         that.currentEditedLayer.getShapeFromDatum(datum).startDrag();
       });
@@ -94,9 +99,11 @@ export default class SimpleEditionState extends BaseState {
 
     const layer = this.currentEditedLayer;
     const datums = layer.selectedDatums;
+    const that = this;
 
     layer.edit(datums, e.dx, e.dy, this.currentTarget);
-    layer.updateShapes(datums);
+    if (that.autoUpdateShapes)
+      layer.updateShapes(datums);
   }
 
   onMouseUp(e) {
@@ -108,7 +115,8 @@ export default class SimpleEditionState extends BaseState {
 
     if (!layer) return;
 
-    layer.updateShapes(layer.selectedDatums);
+    if (that.autoUpdateShapes)
+      layer.updateShapes(layer.selectedDatums);
     layer.selectedDatums.forEach((datum) => {
       layer.getShapeFromDatum(datum).stopDrag();
     });

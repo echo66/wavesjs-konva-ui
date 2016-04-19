@@ -10,8 +10,9 @@ import SimpleEditionState from '../states/simple-edition-state';
 
 
 export default class Scroller extends events.EventEmitter {
-	constructor($el, targetTimeline, pixelsPerSecond, width, height) {
+	constructor($el, targetTimelines, pixelsPerSecond, width, height, start, duration) {
 		super();
+		targetTimelines = (targetTimelines instanceof Array)? targetTimelines : [targetTimelines];
 		this.auxTimeline = new Timeline(pixelsPerSecond, width);
 		var t = document.createElement('div');
 		t.classList.add("scroll-div");
@@ -23,7 +24,7 @@ export default class Scroller extends events.EventEmitter {
 			height: height,
 			yDomain: [0, 1]
 		});
-		this.auxScrollLayer.setBehavior(new ScrollSegmentBehavior(targetTimeline));
+		this.auxScrollLayer.setBehavior(new ScrollSegmentBehavior(targetTimelines));
 		this.auxScrollLayer.setTimeContext(new LayerTimeContext(this.auxTimeline.timeContext));
 		this.auxScrollLayer.configureShape(Segment, {});
 		this.auxScrollLayer.timeContext.lockedToParentInterval = true;
@@ -32,13 +33,12 @@ export default class Scroller extends events.EventEmitter {
 		this.auxScrollLayer.visible_data = function(timeContext, data) { return [0, data.length-1]; };
 		this.auxScrollLayer.timeContext.lockedToParentInterval = true;
 
-		this.scrollDatum = {x:targetTimeline.visibleInterval.start, duration:targetTimeline.visibleInterval.duration};
+		var visibleInterval = { start: start || 10, duration: duration || 10};
+
+		this.scrollDatum = {x: visibleInterval.start, duration: visibleInterval.duration};
 		this.auxScrollLayer.add(this.scrollDatum);
 
-		console.log(targetTimeline.visibleInterval);
-		console.log(this.scrollDatum);
-
-		this.auxTimeline.visibleInterval = targetTimeline.visibleInterval;
+		this.auxTimeline.visibleInterval = visibleInterval;
 		this.auxTrack.add(this.auxScrollLayer);
 		this.auxTimeline.add(this.auxTrack);
 		this.auxTimeline.tracks.update();
@@ -97,5 +97,14 @@ export default class Scroller extends events.EventEmitter {
 
 	get color() {
 		return this.auxScrollLayer.getShapeFromDatum(this.scrollDatum).params.color;
+	}
+
+	set timelines(timelines) {
+		this.auxScrollLayer._behavior.targetTimelines = timelines;
+		this.auxScrollLayer._behavior._refresh();
+	}
+
+	get timelines() {
+		return this.auxScrollLayer._behavior.targetTimelines;
 	}
 }

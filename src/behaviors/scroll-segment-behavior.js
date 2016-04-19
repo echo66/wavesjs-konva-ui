@@ -2,9 +2,9 @@
 import BaseBehavior from './base-behavior';
 
 export default class ScrollSegmentBehavior extends BaseBehavior {
-  constructor(targetTimeline) {
+  constructor(targetTimelines) {
     super();
-    this.targetTimeline = targetTimeline;
+    this.targetTimelines = targetTimelines;
   }
 
   edit(renderingContext, shape, datum, dx, dy, target) {
@@ -46,8 +46,7 @@ export default class ScrollSegmentBehavior extends BaseBehavior {
     shape.x(datum, renderingContext.timeToPixel.invert(targetX));
     shape.y(datum, renderingContext.valueToPixel.invert(targetY));
 
-    this.targetTimeline.visibleInterval = {start: shape.x(datum), duration: shape.width(datum)};
-    this.targetTimeline.tracks.update();
+    this._refresh(shape.x(datum), shape.width(datum));
   }
 
   _resizeLeft(renderingContext, shape, datum, dx, dy, target) {
@@ -62,8 +61,8 @@ export default class ScrollSegmentBehavior extends BaseBehavior {
     shape.x(datum, renderingContext.timeToPixel.invert(targetX));
     shape.width(datum, renderingContext.timeToPixel.invert(targetWidth));
 
-    this.targetTimeline.visibleInterval = {start: shape.x(datum), duration: shape.width(datum)};
-    this.targetTimeline.tracks.update();
+    this._refresh(shape.x(datum), shape.width(datum));
+
   }
 
   _resizeRight(renderingContext, shape, datum, dx, dy, target) {
@@ -74,7 +73,15 @@ export default class ScrollSegmentBehavior extends BaseBehavior {
 
     shape.width(datum, renderingContext.timeToPixel.invert(targetWidth));
 
-    this.targetTimeline.visibleInterval = {start: shape.x(datum), duration: shape.width(datum)};
-    this.targetTimeline.tracks.update();
+    this._refresh(shape.x(datum), shape.width(datum));
+  }
+
+  _refresh(x, width) {
+    x = (x === undefined)? this.layer.data[0].x : x; 
+    width = (width === undefined)? this.layer.data[0].width : width; 
+    this.targetTimelines.forEach((timeline) => {
+      timeline.visibleInterval = {start: x, duration: width};
+      timeline.tracks.update();
+    });
   }
 }

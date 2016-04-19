@@ -53,6 +53,7 @@ import WaveEvent from './interactions/wave-event';
 // shapes
 // import AnnotatedMarker from './shapes/annotated-marker';
 import AnnotatedSegment from './shapes/annotated-segment';
+import AnnotatedDot from './shapes/annotated-dot';
 import BaseShape from './shapes/base-shape';
 import Cursor from './shapes/cursor';
 import Dot from './shapes/dot';
@@ -131,7 +132,7 @@ export default {
 
   shapes: {
     // AnnotatedMarker, 
-    AnnotatedSegment, BaseShape, Cursor, 
+    AnnotatedSegment, AnnotatedDot, BaseShape, Cursor, 
     Dot, Line, Marker, Segment, 
     Ticks, TraceDots, TracePath, Waveform, 
   },
