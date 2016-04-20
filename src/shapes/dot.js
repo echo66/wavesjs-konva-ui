@@ -6,7 +6,7 @@ import Konva from 'konva';
 export default class Dot extends BaseShape {
 
 	destroy() {
-		this.$el.destroy();
+		this.$el[0].destroy();
 		super.destroy();
 	}
 
@@ -27,9 +27,9 @@ export default class Dot extends BaseShape {
 	render() {
 		if (this.$el) { return this.$el; }
 
-		this.$el = new Konva.Circle({});
-		this.$el.shape = this;
-		this.$el.perfectDrawEnabled(false);
+		this.$el = [new Konva.Circle({})];
+		this.$el[0].shape = this;
+		this.$el[0].perfectDrawEnabled(false);
 
 		return this.$el;
 	}
@@ -44,16 +44,16 @@ export default class Dot extends BaseShape {
 		const r = this.params.r;
 		const color = this.params.color;
 		
-		this.$el.x(x);
-		this.$el.y(y);
-		this.$el.radius(r);
-		this.$el.fill(color);
+		this.$el[0].x(x);
+		this.$el[0].y(y);
+		this.$el[0].radius(r);
+		this.$el[0].fill(color);
 	}
 
 	// x1, x2, y1, y2 => in pixel domain
 	inArea(renderingContext, datum, x1, y1, x2, y2) {
-		const x = this.$el.getAbsolutePosition().x;
-		const y = this.$el.getAbsolutePosition().y;
+		const x = this.$el[0].getAbsolutePosition().x;
+		const y = this.$el[0].getAbsolutePosition().y;
 
 		if ((x >= x1 && x <= x2) && (y >= y1 && y <= y2)) {
 			return true;

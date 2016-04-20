@@ -36,10 +36,8 @@ export default class AnnotatedDot extends Dot {
 
 		super.update(renderingContext, d);
 
-		const width = renderingContext.timeToPixel(this.width(d));
-		const height = Math.abs(renderingContext.valueToPixel(this.y(d) + this.height(d)) - renderingContext.valueToPixel(this.y(d)));
 		const x = renderingContext.timeToPixel(this.x(d));
-		const y = renderingContext.valueToPixel(this.y(d) + this.height(d));
+		const y = renderingContext.valueToPixel(this.y(d));
 		const text = this.text(d);
 
 		this.$label.x(x + 3).y(y + 11);
