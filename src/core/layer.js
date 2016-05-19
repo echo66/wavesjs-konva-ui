@@ -239,6 +239,7 @@ export default class Layer extends events.EventEmitter {
 	set yDomain(domain) {
 		this.params.yDomain = domain;
 		this._valueToPixel.domain(domain);
+		this._updateRenderingContext();
 	}
 
 	/**
@@ -287,6 +288,15 @@ export default class Layer extends events.EventEmitter {
 	}
 
 
+	get height() {
+		return this.params.height;
+	}
+
+	set height(value) {
+		this.params.height = value;
+		this._valueToPixel.range([this.params.height, 0]);
+		this._updateRenderingContext();
+	}
 
 
 

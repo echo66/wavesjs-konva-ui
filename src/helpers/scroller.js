@@ -12,7 +12,22 @@ import SimpleEditionState from '../states/simple-edition-state';
 export default class Scroller extends events.EventEmitter {
 	constructor($el, targetTimelines, pixelsPerSecond, width, height, start, duration) {
 		super();
-		targetTimelines = (targetTimelines instanceof Array)? targetTimelines : [targetTimelines];
+		const that = this;
+		this.handlers = {
+			set: function(timelines, index, value) {
+				// console.log([timelines, index, value]);
+				if (!isNaN(parseInt(index))) {
+					timelines[index] = value;
+					var interval = {
+						start: that.visibleRange.start, 
+						duration: that.visibleRange.duration
+					};
+					timelines[index].visibleInterval = interval;
+					timelines[index].tracks.update();
+				}
+				return true;
+			}
+		};
 		this.auxTimeline = new Timeline(pixelsPerSecond, width);
 		var t = document.createElement('div');
 		t.classList.add("scroll-div");
@@ -24,7 +39,7 @@ export default class Scroller extends events.EventEmitter {
 			height: height,
 			yDomain: [0, 1]
 		});
-		this.auxScrollLayer.setBehavior(new ScrollSegmentBehavior(targetTimelines));
+		this.auxScrollLayer.setBehavior(new ScrollSegmentBehavior(new Proxy([], this.handlers)));
 		this.auxScrollLayer.setTimeContext(new LayerTimeContext(this.auxTimeline.timeContext));
 		this.auxScrollLayer.configureShape(Segment, {});
 		this.auxScrollLayer.timeContext.lockedToParentInterval = true;
@@ -33,12 +48,18 @@ export default class Scroller extends events.EventEmitter {
 		this.auxScrollLayer.visible_data = function(timeContext, data) { return [0, data.length-1]; };
 		this.auxScrollLayer.timeContext.lockedToParentInterval = true;
 
-		var visibleInterval = { start: start || 10, duration: duration || 10};
+		var visibleInterval = { start: start || 0, duration: duration || 10};
 
 		this.scrollDatum = {x: visibleInterval.start, duration: visibleInterval.duration};
 		this.auxScrollLayer.add(this.scrollDatum);
 
 		this.auxTimeline.visibleInterval = visibleInterval;
+
+		targetTimelines = (targetTimelines instanceof Array)? targetTimelines : [targetTimelines];
+		targetTimelines.forEach((timeline) => {
+			that.timelines.push(timeline);
+		});
+
 		this.auxTrack.add(this.auxScrollLayer);
 		this.auxTimeline.add(this.auxTrack);
 		this.auxTimeline.tracks.update();
@@ -47,7 +68,7 @@ export default class Scroller extends events.EventEmitter {
 
 		this.auxTimeline.state = new SimpleEditionState(this.auxTimeline);
 
-		const that = this;
+		
 		this.auxTimeline.on('event', (e)=> {
 			if (e.type == 'click' && e.target && !e.target.shape) {
 				const offset = (-that.auxTimeline.timeContext.offset);
@@ -87,7 +108,7 @@ export default class Scroller extends events.EventEmitter {
 	}
 
 	get visibleRange() {
-		return {start: this.scrollDatum.x, duration: this.scrollDatum.width};
+		return {start: this.scrollDatum.x, duration: this.scrollDatum.width || 10};
 	}
 
 	set color(value) {
@@ -100,7 +121,7 @@ export default class Scroller extends events.EventEmitter {
 	}
 
 	set timelines(timelines) {
-		this.auxScrollLayer._behavior.targetTimelines = timelines;
+		this.auxScrollLayer._behavior.targetTimelines = new Proxy(timelines, this.handlers);
 		this.auxScrollLayer._behavior._refresh();
 	}
 

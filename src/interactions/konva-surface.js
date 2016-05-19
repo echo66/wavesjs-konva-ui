@@ -168,11 +168,13 @@ export default class Surface extends EventSource {
     };
 
     const onDomDragOver = (e) => {
+      e.preventDefault();
       let event = this._createEvent('dragover', e);
       this.emit('event', event);
     };
 
     const onDomDrop = (e) => {
+      e.preventDefault();
       let event = this._createEvent('drop', e);
       this.emit('event', event);
     };

@@ -40,8 +40,8 @@ export default class AnnotatedDot extends Dot {
 		const y = renderingContext.valueToPixel(this.y(d));
 		const text = this.text(d);
 
-		this.$label.x(x + 3).y(y + 11);
-		this.$label.height(y);
+		this.$label.x(x + 3).y(y);
+		this.$label.height(Math.min(y, renderingContext.height + 10));
 		this.$label.fill('#242424');
 		this.$label.fontSize(10);
 		this.$label.fontFamily('monospace');

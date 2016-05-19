@@ -41,7 +41,7 @@ export default class Dot extends BaseShape {
 		const y = renderingContext.valueToPixel(this.y(d));
 		// const r	= this.r(d);
 		// const color = this.color(d);
-		const r = this.params.r;
+		const r = this.r(d);
 		const color = this.params.color;
 		
 		this.$el[0].x(x);

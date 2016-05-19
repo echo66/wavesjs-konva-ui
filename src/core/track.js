@@ -248,7 +248,7 @@ export default class Track extends events.EventEmitter {
 
     layers.forEach((layer) => {
       if (!this.layers.has(layer)) { return; }
-      layer.params.height = that.height;
+      layer.height = that.height;
       layer.update();
     });
     this.$backgroundLayer.moveToBottom();

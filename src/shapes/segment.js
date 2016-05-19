@@ -11,23 +11,39 @@ export default class Segment extends BaseShape {
 		this.$leftHandler = null;
 		this.$rightHandler.destroy();
 		this.$rightHandler = null;
+		this.$topHandler.destroy();
+		this.$topHandler = null;
+		this.$bottomHandler.destroy();
+		this.$bottomHandler = null;
 		super.destroy();
 	}
 
 	getClassName() { return 'segment'; }
 
 	_getAccessorList() {
-		return { x: 0, y: 0, width: 1, height: 1 };
-	}
+		return { 
+			x: 0, 
+			y: 0, 
+			width: 1, 
+			height: 1, 
 
-	_getDefaults() {
-		return {
 			displayHandlers: true,
 			handlerWidth: 2,
 			handlerOpacity: 0.8,
 			opacity: 0.6, 
 			handlerColor: '#000000', 
 			color: '#000000',
+		};
+	}
+
+	_getDefaults() {
+		return {
+			displayHandlers: undefined,
+			handlerWidth: undefined,
+			handlerOpacity: undefined,
+			opacity: undefined, 
+			handlerColor: undefined, 
+			color: undefined,
 		};
 	}
 
@@ -38,8 +54,6 @@ export default class Segment extends BaseShape {
 
 		this.$segment = new Konva.Rect({});
 		this.$segment.name('segment');
-		// this.$segment.on('mouseover', function(e) { document.body.style.cursor = 'pointer'; });
-		// this.$segment.on('mouseout', function(e) { document.body.style.cursor = 'default'; });
 		this.$segment.shape = this;
 
 		this.$el.push(this.$segment);
@@ -47,23 +61,33 @@ export default class Segment extends BaseShape {
 		this.$leftHandler = new Konva.Rect({});
 		this.$leftHandler.addName('left');
 		this.$leftHandler.addName('handler');
-		// this.$leftHandler.on('mouseover', function() { document.body.style.cursor = 'ew-resize'; });
-		// this.$leftHandler.on('mouseout', function() { document.body.style.cursor = 'default'; });
 		this.$leftHandler.shape = this;
 
 		this.$rightHandler = new Konva.Rect({});
 		this.$rightHandler.addName('right');
 		this.$rightHandler.addName('handler');
-		// this.$rightHandler.on('mouseover', function() { document.body.style.cursor = 'ew-resize'; });
-		// this.$rightHandler.on('mouseout', function() { document.body.style.cursor = 'default'; });
 		this.$rightHandler.shape = this;
+
+		this.$topHandler = new Konva.Rect({});
+		this.$topHandler.addName('top');
+		this.$topHandler.addName('handler');
+		this.$topHandler.shape = this;
+
+		this.$bottomHandler = new Konva.Rect({});
+		this.$bottomHandler.addName('bottom');
+		this.$bottomHandler.addName('handler');
+		this.$bottomHandler.shape = this;
 
 		this.$segment.perfectDrawEnabled(false);
 		this.$leftHandler.perfectDrawEnabled(false);
 		this.$rightHandler.perfectDrawEnabled(false);
+		this.$topHandler.perfectDrawEnabled(false);
+		this.$bottomHandler.perfectDrawEnabled(false);
 
 		this.$el.push(this.$leftHandler);
 		this.$el.push(this.$rightHandler);
+		this.$el.push(this.$topHandler);
+		this.$el.push(this.$bottomHandler);
 
 		return this.$el;
 	}
@@ -74,6 +98,8 @@ export default class Segment extends BaseShape {
 		this.$segment.visible(this.visible);
 		this.$leftHandler.visible(this.visible && this.params.displayHandlers);
 		this.$rightHandler.visible(this.visible && this.params.displayHandlers);
+		this.$topHandler.visible(this.visible && this.params.topHandler);
+		this.$bottomHandler.visible(this.visible && this.params.bottomHandler);
 
 		if (!this.visible)	return;
 
@@ -81,30 +107,51 @@ export default class Segment extends BaseShape {
 		const height = Math.abs(renderingContext.valueToPixel(this.y(d) + this.height(d)) - renderingContext.valueToPixel(this.y(d)));
 		const x = renderingContext.timeToPixel(this.x(d));
 		const y = renderingContext.valueToPixel(this.y(d) + this.height(d));
+		const color = this.params.color || this.color(d);
+		const handlerColor = this.params.handlerColor || this.handlerColor(d);
+		const opacity = this.params.opacity || this.opacity(d);
+		const handlerOpacity = this.params.handlerOpacity || this.handlerOpacity(d);
+		const handlerWidth = this.params.handlerWidth || this.handlerWidth(d);
 
 		this.$segment
 				.x(x)
 				.y(y)
 				.width(Math.max(width, 0))
 				.height(height)
-				.fill(this.params.color)
-				.opacity(this.params.opacity);
+				.fill(color)
+				.opacity(opacity);
 
 		this.$leftHandler
 				.x(x)
 				.y(y)
-				.width(this.params.handlerWidth)
+				.width(handlerWidth)
 				.height(height)
-				.fill(this.params.handlerColor)
-				.opacity(this.params.handlerOpacity);
+				.fill(handlerColor)
+				.opacity(handlerOpacity);
 				
 		this.$rightHandler
-				.x(x + width - this.params.handlerWidth)
+				.x(x + width - handlerWidth)
 				.y(y)
 				.height(height)
-				.width(this.params.handlerWidth)
-				.fill(this.params.handlerColor)
-				.opacity(this.params.handlerOpacity);
+				.width(handlerWidth)
+				.fill(handlerColor)
+				.opacity(handlerOpacity);
+
+		this.$topHandler
+				.x(x)
+				.y(y)
+				.height(handlerWidth)
+				.width(width)
+				.fill(handlerColor)
+				.opacity(handlerOpacity);
+
+		this.$bottomHandler
+				.x(x)
+				.y(y+height-handlerWidth)
+				.height(handlerWidth)
+				.width(width)
+				.fill(handlerColor)
+				.opacity(handlerOpacity);
 	}
 
 	inArea(renderingContext, datum, x1, y1, x2, y2) {

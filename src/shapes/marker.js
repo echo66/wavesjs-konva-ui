@@ -15,18 +15,27 @@ export default class Marker extends BaseShape {
   getClassName() { return 'marker'; }
 
   _getAccessorList() {
-    return { x: 0 };
-  }
-
-  _getDefaults() {
-    return {
+    return { 
+      x: 0, 
       handlerWidth: 7,
       handlerHeight: 10,
-      displayHandlers: true,
+      displayHandler: true,
       opacity: 1,
       strokeWidth: 2, 
       color: 'black',
       handlerColor: 'black'
+    };
+  }
+
+  _getDefaults() {
+    return {
+      handlerWidth: undefined,
+      handlerHeight: undefined,
+      displayHandler: undefined,
+      opacity: undefined,
+      strokeWidth: undefined, 
+      color: undefined,
+      handlerColor: undefined
     };
   }
 
@@ -52,19 +61,37 @@ export default class Marker extends BaseShape {
   update(renderingContext, datum) {
     const d = datum || this.datum;
 
+    const displayHandler = this.params.displayHandler || this.displayHandler(d);
+
     this.$line.visible(this.visible);
-    this.$handler.visible(this.visible && this.params.displayHandlers);
+    this.$handler.visible(this.visible && displayHandler);
 
     if (!this.visible)  return;
 
     const x = renderingContext.timeToPixel(this.x(d)) - 0.5;
     const height = renderingContext.height;
+    const handlerWidth = this.params.handlerWidth || this.handlerWidth(d);
+    const handlerHeight = this.params.handlerHeight || this.handlerHeight(d);
+    const opacity = this.params.opacity || this.opacity(d);
+    const strokeWidth = this.params.strokeWidth || this.strokeWidth(d);
+    const color = this.params.color || this.color(d);
+    const handlerColor = this.params.handlerColor || this.handlerColor(d);
 
-    this.$line.x(x).y(0).width(this.params.strokeWidth);
-    this.$line.height(height);
-    this.$line.fill(this.params.color);
+    this.$line
+            .x(x)
+            .y(0)
+            .width(strokeWidth)
+            .height(height)
+            .fill(color)
+            .opacity(opacity);
 
-    this.$handler.x(x).y(0).width(this.params.handlerWidth).height(this.params.handlerHeight).fill(this.params.handlerColor);
+    this.$handler
+            .x(x)
+            .y(0)
+            .width(handlerWidth)
+            .height(handlerHeight)
+            .fill(handlerColor)
+            .opacity(opacity);
   }
 
   inArea(renderingContext, datum, x1, y1, x2, y2) {
@@ -72,9 +99,11 @@ export default class Marker extends BaseShape {
 
     // handlers only are selectable
     const x = renderingContext.timeToPixel(this.x(d));
-    const shapeX1 = x - (this.params.handlerWidth - 1) / 2;
-    const shapeX2 = shapeX1 + this.params.handlerWidth;
-    const shapeY1 = renderingContext.height - this.params.handlerHeight;
+    const handlerWidth = this.params.handlerWidth || this.handlerWidth(d);
+    const handlerHeight = this.params.handlerHeight || this.handlerHeight(d);
+    const shapeX1 = x - (handlerWidth - 1) / 2;
+    const shapeX2 = shapeX1 + handlerWidth;
+    const shapeY1 = renderingContext.height - handlerHeight;
     const shapeY2 = renderingContext.height;
 
     const xOverlap = Math.max(0, Math.min(x2, shapeX2) - Math.max(x1, shapeX1));

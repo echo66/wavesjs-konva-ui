@@ -17,6 +17,7 @@ export default function beatGridAxisGenerator(beatGrid, signature) {
     for (let beat = start; beat < end; beat++) {
       let time = _beatGrid.seconds(beat);
       let label = "" + beat;
+      // let focused = (beat % 4 === 0)? true : false;
       data.push({ time, focused, label });
     }
 

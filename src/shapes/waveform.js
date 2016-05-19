@@ -1,6 +1,6 @@
 'use strict';
 import BaseShape from './base-shape';
-import scales from '../utils/scales'
+import scales from '../utils/scales';
 import Konva from 'konva';
 
 export default class Waveform extends BaseShape {
@@ -107,7 +107,7 @@ export default class Waveform extends BaseShape {
 		this.$label = new Konva.Text({ listening: false });
 		this.$label.shape = this;
 
-		this.$waveform = new Konva.Path({ listening: false });
+		this.$waveform = new Konva.Shape({ listening: false });
 		this.$waveform.shape = this;
 
 		this.$el.push(this.$body);
@@ -133,7 +133,7 @@ export default class Waveform extends BaseShape {
 		if (!this.visible)	return;
 
 
-		var  x = renderingContext.timeToPixel(this.x(d));
+		var x = renderingContext.timeToPixel(this.x(d));
 		var width = renderingContext.timeToPixel(this.width(d));
 		var height = renderingContext.height;
 		var color = this.params.waveform.color;
@@ -159,71 +159,98 @@ export default class Waveform extends BaseShape {
 
 		this.$waveform.perfectDrawEnabled(true);
 
+		this.$waveform.x(x);
+
 
 		// WAVEFORM PART
 
 
 		// define nbr of samples per pixels
-	    const sliceMethod = this.data(d) instanceof Float32Array ? 'subarray' : 'slice';
-	    const nbrSamples = this.bufferEnd(d) - this.bufferStart(d);
-	    const duration = nbrSamples / this.sampleRate(d);
-	    const samplesPerPixel = nbrSamples / width;
+		const sliceMethod = this.data(d) instanceof Float32Array ? 'subarray' : 'slice';
+		const nbrSamples = this.bufferEnd(d) - this.bufferStart(d);
+		// const duration = nbrSamples / this.sampleRate(d);
+		const samplesPerPixel = nbrSamples / width;
 
-	    if (!samplesPerPixel || this.data(d).length < samplesPerPixel) { return; }
+		if (!samplesPerPixel || this.data(d).length < samplesPerPixel) { return; }
 
-	    // compute/draw visible area only
-	    // @TODO refactor this ununderstandable mess
-	    let minX = Math.max(-renderingContext.offsetX, renderingContext.timeToPixel(this.x(d)));
+		// compute/draw visible area only
+		// @TODO refactor this ununderstandable mess
+		// let minX = Math.max(-renderingContext.offsetX, renderingContext.timeToPixel(this.x(d)));
+		// let maxX = Math.min(-renderingContext.offsetX + renderingContext.width, renderingContext.timeToPixel(this.x(d) + this.width(d)));
+		let minX = 0;
+		let maxX = renderingContext.timeToPixel(this.width(d));
 
-	    let maxX = Math.min(-renderingContext.offsetX + renderingContext.width, renderingContext.timeToPixel(this.x(d) + this.width(d)));
+		// get min/max per pixels, clamped to the visible area
+		const invert = renderingContext.timeToPixel.invert;
+		const sampleRate = this.sampleRate(d);
+		const MID = 0;
+		const that = this;
+		var min, max, y1, y2, sample, px, i, bufferStart, bufferEnd, coef;
 
-	    // get min/max per pixels, clamped to the visible area
-	    const invert = renderingContext.timeToPixel.invert;
-	    const sampleRate = this.sampleRate(d);
-	    const minMax = [];
+		bufferStart = this.bufferStart(d);
+		bufferEnd = this.bufferEnd(d);
+		var bufferIntervalDuration = bufferEnd - bufferStart;
 
-	    for (let px = minX; px < maxX; px++) {
-	      const startTime = invert(px);
-	      const startSample = startTime * sampleRate;
-	      const extract = this.data(d)[sliceMethod](startSample, startSample + samplesPerPixel);
+		if (x < -renderingContext.offsetX) {
+			// recalculate bufferStart
+			coef = (-renderingContext.offsetX - x) / (x + width);
+			bufferStart += coef * bufferIntervalDuration;
+		}
+		if (x + width > -renderingContext.offsetX + renderingContext.width) {
+			// recalculate bufferEnd
+			coef = (x + -renderingContext.offsetX + renderingContext.width) / (x + width);
+			bufferEnd = bufferStart + coef * bufferIntervalDuration;
+		}
 
-	      let min = Infinity;
-	      let max = -Infinity;
+		minX = -renderingContext.offsetX;
+		maxX = minX + renderingContext.visibleWidth;
 
-	      for (let j = 0, l = extract.length; j < l; j++) {
-	        let sample = extract[j];
-	        if (sample < min) { min = sample; }
-	        if (sample > max) { max = sample; }
-	      }
-	      // disallow Infinity
-	      min = !isFinite(min) ? 0 : min;
-	      max = !isFinite(max) ? 0 : max;
-	      if (min === 0 && max === 0) { continue; }
+		this.$waveform.sceneFunc(function(context) {
 
-	      minMax.push([px, min, max]);
-	    }
+			context.beginPath();
 
-	    if (!minMax.length) { return; }
+			context.moveTo(minX, height/2);
 
-	    // const MID = renderingContext.valueToPixel((renderingContext.valueToPixel.domain()[1] - renderingContext.valueToPixel.domain()[0]) / 2)
-	    const MID = 0;
-	    const PIXEL = 0;
-	    const MIN   = 1;
-	    const MAX   = 2;
-	    const ZERO  = renderingContext.valueToPixel(0);
-	    // rendering strategies
-	    // if (this.params.renderingStrategy === 'svg') {
+			for (i=bufferStart, px=minX; i<bufferEnd && px<maxX; i+=samplesPerPixel, px++) {
+				const extract = that.data(d)[sliceMethod](i, Math.round(i + samplesPerPixel));
 
-	    let instructions = minMax.map((datum, index) => {
-	        const x  = datum[PIXEL];
-	        let y1 = Math.round(renderingContext.valueToPixel(datum[MIN]));
-	        let y2 = Math.round(renderingContext.valueToPixel(datum[MAX]));
-	        // return `${x},${ZERO}L${x},${y1}L${x},${y2}L${x},${ZERO}`;
-	        return `${x},${y1-MID}L${x},${y2-MID}`;
-	    });
+				min = Infinity;
+				max = -Infinity;
 
-	    const path = 'M' + instructions.join('L');
-	    this.$waveform.data('M' + `${0},${height/2}L` + instructions.join('L') + `L${minMax[minMax.length-1][0]},${height/2}` + 'z');
+				for (let j = 0, l = extract.length; j < l; j++) {
+					sample = extract[j];
+					if (sample < min) { min = sample; }
+					if (sample > max) { max = sample; }
+				}
+				// disallow Infinity
+				min = !isFinite(min) ? 0 : min;
+				max = !isFinite(max) ? 0 : max;
+				if (min === 0 && max === 0) { continue; }
+
+				y1 = Math.round(renderingContext.valueToPixel(min));
+				y2 = Math.round(renderingContext.valueToPixel(max));
+
+				context.lineTo(px, y1 - MID);
+				context.lineTo(px, y2 - MID);
+
+			}
+
+			context.lineTo(maxX, height/2);
+
+			context.closePath();
+
+			context.fillStrokeShape(this);
+
+		});
+
+		// this.$waveform.cache({
+		// 	x: 0, 
+		// 	y: 0, 
+		// 	width: width, 
+		// 	height: height, 
+		// 	offset: 2
+		// });
+
 	}
 
 	inArea(renderingContext, datum, x1, y1, x2, y2) {

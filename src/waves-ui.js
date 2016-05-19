@@ -5,6 +5,7 @@ import gridAxisGenerator from './axis/grid-axis-generator';
 
 // behaviors
 import BaseBehavior from './behaviors/base-behavior';
+import SnapBaseBehavior from './behaviors/snap-base-behavior';
 import BeatGridSnapSegmentBehavior from './behaviors/beat-grid-snap-segment-behavior';
 import BreakpointBehavior from './behaviors/breakpoint-behavior';
 import MarkerBehavior from './behaviors/marker-behavior';
@@ -80,6 +81,7 @@ import ShapeInsertionState from './states/shape-insertion-state';
 import SimpleEditionState from './states/simple-edition-state';
 import DragToCreateIntervalState from './states/drag-to-create-interval-state';
 // import BeatGridEditorInteractionsState from './states/beat-grid-interactions-state';
+import DragAndDropState from './states/drag-and-drop-state';
 
 
 
@@ -94,7 +96,7 @@ export default {
   }, 
 
   behaviors: {
-    BaseBehavior, BeatGridSnapSegmentBehavior, 
+    BaseBehavior, SnapBaseBehavior, BeatGridSnapSegmentBehavior, 
     BreakpointBehavior, MarkerBehavior, 
     ScrollSegmentBehavior, SegmentBehavior, 
     SiblingLockedSegmentBehavior, SimpleSnapSegmentBehavior, 
@@ -141,7 +143,7 @@ export default {
     BaseState, BreakpointState, BrushZoomState, CenteredZoomState, 
     CenteredScrollState, ContextEditionState, DropAndAddState, EditionState, 
     SelectionState, HorizontalSelectionState, ShapeInsertionState, SimpleEditionState, 
-    DragToCreateIntervalState
+    DragToCreateIntervalState, DragAndDropState
   },
 
   utils: {

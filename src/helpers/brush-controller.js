@@ -21,10 +21,22 @@ export default class BrushController {
 		};
 	}
 
+	set brushArea(A) {
+		var x = A.x, 
+			y = (A.y || 0), 
+			width = A.width, 
+			height = (A.height || this.track.height);
+
+		this.track.$brush.x(x).y(y).width(width).height(height);
+		
+		this.track.$interactionsLayer.batchDraw();
+	}
+
 	set opacity(value) {
 		this._opacity = value;
 		if (this.track.$brush)
 			this.track.$brush.opacity(this._opacity);
+		this.track.$interactionsLayer.batchDraw();
 	}
 
 	get opacity() {
@@ -35,6 +47,7 @@ export default class BrushController {
 		this._innerColor = value;
 		if (this.track.$brush)
 			this.track.$brush.fill(this._innerColor);
+		this.track.$interactionsLayer.batchDraw();
 	}
 
 	get innerColor() {

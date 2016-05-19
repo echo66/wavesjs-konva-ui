@@ -465,8 +465,12 @@ export default class Timeline extends events.EventEmitter {
   getTrackFromDOMElement($el) {
     
     for (var i=0; i<this.tracks.length; i++) {
-      if (this.tracks[i].$stage.content === $el)
-        return this.tracks[i];
+      var node = $el;
+      while (node !== document.body && node !== null) {
+        if (this.tracks[i].$stage.content === node) 
+          return this.tracks[i];
+        node = node.parentElement;
+      }
     }
 
     return undefined;
