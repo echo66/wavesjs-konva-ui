@@ -13,11 +13,19 @@ export default class Line extends BaseShape {
   getClassName() { return 'line'; }
 
   _getAccessorList() {
-    return { x: 0, y: 0 };
+    return { 
+      x: 0, 
+      y: 0, 
+      color: '#000000', 
+      strokeWidth: 1
+    };
   }
 
   _getDefaults() {
-    return { color: '#000000', strokeWidth: 1 };
+    return { 
+      color: '#000000', 
+      strokeWidth: 1 
+    };
   }
 
   render(renderingContext) {

@@ -38,6 +38,11 @@ export default class Segment extends BaseShape {
 
 	_getDefaults() {
 		return {
+			x: undefined, 
+			y: undefined, 
+			width: undefined, 
+			height: undefined, 
+
 			displayHandlers: undefined,
 			handlerWidth: undefined,
 			handlerOpacity: undefined,
@@ -103,10 +108,10 @@ export default class Segment extends BaseShape {
 
 		if (!this.visible)	return;
 
-		const width = renderingContext.timeToPixel(this.width(d));
-		const height = Math.abs(renderingContext.valueToPixel(this.y(d) + this.height(d)) - renderingContext.valueToPixel(this.y(d)));
-		const x = renderingContext.timeToPixel(this.x(d));
-		const y = renderingContext.valueToPixel(this.y(d) + this.height(d));
+		const width = this.params.width || renderingContext.timeToPixel(this.width(d));
+		const height = this.params.height || Math.abs(renderingContext.valueToPixel(this.y(d) + this.height(d)) - renderingContext.valueToPixel(this.y(d)));
+		const x = this.params.x || renderingContext.timeToPixel(this.x(d));
+		const y = this.params.y || renderingContext.valueToPixel(this.y(d) + this.height(d));
 		const color = this.params.color || this.color(d);
 		const handlerColor = this.params.handlerColor || this.handlerColor(d);
 		const opacity = this.params.opacity || this.opacity(d);

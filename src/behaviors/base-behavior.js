@@ -129,4 +129,17 @@ export default class BaseBehavior {
    */
   highlight(datum, isHighlighted) { return false; }
 
+  pushValues(datums) {
+    const that = this;
+
+    datums.forEach((datum) => {
+      let shape = that._layer.getShapeFromDatum(datum);
+      for (var k in shape.params) {
+        shape[k](datum, shape.params);
+        shape.params = undefined;
+      }
+    });
+    
+  }
+
 }

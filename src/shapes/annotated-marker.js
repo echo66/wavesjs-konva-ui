@@ -15,6 +15,18 @@ export default class AnnotatedMarker extends Marker {
   _getAccessorList() {
     let list = super._getAccessorList();
     list.text = 'default';
+    list.fontFill = '#242424';
+    list.fontSize = 10;
+    list.fontFamily = 'monospace';
+    return list;
+  }
+
+  _getDefaults() {
+    let list = super._getDefaults();
+    list.text = undefined;
+    list.fontFill = undefined;
+    list.fontSize = undefined;
+    list.fontFamily = undefined;
     return list;
   }
 
@@ -36,17 +48,17 @@ export default class AnnotatedMarker extends Marker {
 
     super.update(renderingContext, d);
 
-    const width = renderingContext.timeToPixel(this.width(d));
-    const height = Math.abs(renderingContext.valueToPixel(this.y(d) + this.height(d)) - renderingContext.valueToPixel(this.y(d)));
     const x = renderingContext.timeToPixel(this.x(d));
-    const y = renderingContext.valueToPixel(this.y(d) + this.height(d));
-    const text = this.text(d);
+    const y = 0;
+    const text = this.params.text || this.text(d);
+    const fontFill = this.params.fontFill || this.fontFill(d);
+    const fontSize = this.params.fontSize || this.fontSize(d);
+    const fontFamily = this.params.fontFamily || this.fontFamily(d);
 
     this.$label.x(x + 3).y(y + 11);
-    this.$label.height(y);
-    this.$label.fill('#242424');
-    this.$label.fontSize(10);
-    this.$label.fontFamily('monospace');
+    this.$label.fill(fontFill);
+    this.$label.fontSize(fontSize);
+    this.$label.fontFamily(fontFamily);
     this.$label.text(text);
   }
 }

@@ -7,6 +7,7 @@ export default class SegmentBehavior extends BaseBehavior {
     this.snapFn = snapFn || function(datum, accessor, value) {
       return value;
     };
+    this._obj = { x: undefined, y: undefined, height: undefined, width: undefined };
   }
 
   edit(renderingContext, shape, datum, dx, dy, target) {
@@ -31,6 +32,20 @@ export default class SegmentBehavior extends BaseBehavior {
     this[`_${action}`](renderingContext, shape, datum, dx, dy, target);
   }
 
+  _lol(datum, renderingContext, shape, targetX, targetY, targetWidth, targetHeight, other) {
+    this._obj.x = (targetX !== undefined)? renderingContext.timeToPixel.invert(targetX) : shape.x(datum);
+    this._obj.y = (targetY !== undefined)? renderingContext.valueToPixel.invert(targetY) : shape.y(datum);
+    this._obj.width = (targetWidth !== undefined)? renderingContext.timeToPixel.invert(targetWidth) : shape.width(datum);
+    this._obj.height = (targetHeight !== undefined)? renderingContext.valueToPixel.invert(targetHeight) : shape.height(datum);
+
+    this.snapFn(datum, this._obj);
+
+    shape.x(datum, this._obj.x);
+    shape.y(datum, this._obj.y);
+    shape.width(datum, this._obj.width);
+    shape.height(datum, this._obj.height);
+  }
+
   _move(renderingContext, shape, datum, dx, dy, target) {
     const layerHeight = renderingContext.height;
     // current values
@@ -53,8 +68,7 @@ export default class SegmentBehavior extends BaseBehavior {
       targetY = height;
     }
 
-    shape.x(datum, this.snapFn(datum, 'x', renderingContext.timeToPixel.invert(targetX)));
-    shape.y(datum, this.snapFn(datum, 'y', renderingContext.valueToPixel.invert(targetY)));
+    this._lol(datum, renderingContext, shape, targetX, targetY, undefined, undefined, undefined);
   }
 
   _resizeLeft(renderingContext, shape, datum, dx, dy, target) {
@@ -66,8 +80,7 @@ export default class SegmentBehavior extends BaseBehavior {
     let targetX     = x + dx < maxTargetX ? Math.max(x + dx, 0) : x;
     let targetWidth = targetX !== 0 ? Math.max(width - dx, 1) : width;
 
-    shape.x(datum, this.snapFn(datum, 'x', renderingContext.timeToPixel.invert(targetX)));
-    shape.width(datum, this.snapFn(datum, 'width', renderingContext.timeToPixel.invert(targetWidth)));
+    this._lol(datum, renderingContext, shape, targetX, undefined, targetWidth, undefined, undefined);
   }
 
   _resizeRight(renderingContext, shape, datum, dx, dy, target) {
@@ -76,7 +89,7 @@ export default class SegmentBehavior extends BaseBehavior {
     // target values
     let targetWidth = Math.max(width + dx, 1);
 
-    shape.width(datum, this.snapFn(datum, 'width', renderingContext.timeToPixel.invert(targetWidth)));
+    this._lol(datum, renderingContext, shape, undefined, undefined, targetWidth, undefined, undefined);
   }
 
   _resizeTop(renderingContext, shape, datum, dx, dy, target) {
@@ -86,8 +99,7 @@ export default class SegmentBehavior extends BaseBehavior {
 
   	let targetHeight = height + dy;
 
-  	shape.height(datum, this.snapFn(datum, 'height', renderingContext.valueToPixel.invert(targetHeight)));
-
+    this._lol(datum, renderingContext, shape, undefined, undefined, undefined, targetHeight, undefined);
   }
 
   _resizeBottom(renderingContext, shape, datum, dx, dy, target) {
@@ -97,12 +109,10 @@ export default class SegmentBehavior extends BaseBehavior {
     const y = renderingContext.valueToPixel(shape.y(datum));
     const height = renderingContext.valueToPixel(shape.height(datum));
 
-  	let targetY = Math.min(Math.max(0, y + dy), layerHeight);
-  	let targetHeight = height - dy;
+    let targetY = Math.min(Math.max(0, y + dy), layerHeight);
+    let targetHeight = height - dy;
 
-  	shape.y(datum, this.snapFn(datum, 'y', renderingContext.valueToPixel.invert(targetY)));
-  	shape.height(datum, this.snapFn(datum, 'height', renderingContext.valueToPixel.invert(targetHeight)));
-
+    this._lol(datum, renderingContext, shape, undefined, targetY, undefined, targetHeight, undefined);
   }
 
   select(datum) {

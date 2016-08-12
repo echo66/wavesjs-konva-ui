@@ -110,6 +110,7 @@ export default class Track extends events.EventEmitter {
     this.$interactionsLayer.addName('track-interactions');
 
     this.$backgroundLayer = new Konva.Layer({});
+    this.$backgroundLayer.listening(true);
     this.$backgroundLayer.addName('track-background');
     const bgrect = new Konva.Rect({});
     bgrect.addName('track-background-rect');

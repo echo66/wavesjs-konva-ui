@@ -207,7 +207,7 @@ export default class Surface extends EventSource {
     this.$el.$stage.on('dblclick', onDblClick);
     this.$el.$stage.on('mouseover', onMouseOver);
     this.$el.$stage.on('mouseout', onMouseOut);
-    this.$el.$stage.on('mouseover', onMouseOver);
+    // this.$el.$stage.on('mouseover', onMouseOver);
     this.$el.$stage.content.addEventListener('dragstart', onDomDragStart);
     this.$el.$stage.content.addEventListener('dragenter', onDomDragEnter);
     this.$el.$stage.content.addEventListener('drop', onDomDrop);

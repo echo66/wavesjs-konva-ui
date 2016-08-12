@@ -43,16 +43,16 @@ export default class DragAndDropState extends BaseState {
 
 	onDragStart(e) {
 		// N/A
-		console.log('DragAndDropState - dragStart');
+		// console.log('DragAndDropState - dragStart');
 	}
 
 	onDragEnd(e) {
 		// TODO ?
-		console.log('DragAndDropState - dragEnd');
+		// console.log('DragAndDropState - dragEnd');
 	}
 
 	onDragEnter(e) {
-		console.log('DragAndDropState - dragEnter');	
+		// console.log('DragAndDropState - dragEnter');	
 		if (!this.brushController) {
 			this.currentTrack = this.timeline.getTrackFromDOMElement(e.target);
 			this.brushController = new BrushController(this.currentTrack);
@@ -72,13 +72,13 @@ export default class DragAndDropState extends BaseState {
 
 		this.brushController.brushArea = { x: x, width: width };
 
-		console.log('DragAndDropState - dragOver');
+		// console.log('DragAndDropState - dragOver');
 	}
 
 	onDragLeave(e) {
 		this.brushController.removeBrush();
 
-		console.log('DragAndDropState - dragLeave');
+		// console.log('DragAndDropState - dragLeave');
 	}
 
 	onDrop(e) {
@@ -92,6 +92,6 @@ export default class DragAndDropState extends BaseState {
 
 		this.brushController.removeBrush();
 
-		console.log('DragAndDropState - drop');
+		// console.log('DragAndDropState - drop');
 	}
 }

@@ -14,13 +14,20 @@ export default class Dot extends BaseShape {
 
 	// @TODO rename : confusion between accessors and meta-accessors
 	_getAccessorList() {
-		return { x: 0, y: 0 };
+		return { 
+			x: 0, 
+			y: 0, 
+			r: 3, 
+			color: 'black' 
+		};
 	}
 
 	_getDefaults() {
-		return {
-			color: 'black', 
-			r: 3
+		return { 
+			x: undefined, 
+			y: undefined, 
+			r: undefined, 
+			color: undefined 
 		};
 	}
 
@@ -37,12 +44,12 @@ export default class Dot extends BaseShape {
 	update(renderingContext, datum) {
 		const d = datum || this.datum;
 
-		const x = renderingContext.timeToPixel(this.x(d));
-		const y = renderingContext.valueToPixel(this.y(d));
+		const x = this.params.x || renderingContext.timeToPixel(this.x(d));
+		const y = this.params.y || renderingContext.valueToPixel(this.y(d));
 		// const r	= this.r(d);
 		// const color = this.color(d);
-		const r = this.r(d);
-		const color = this.params.color;
+		const r = this.params.r || this.r(d);
+		const color = this.params.color || this.color(d);
 		
 		this.$el[0].x(x);
 		this.$el[0].y(y);

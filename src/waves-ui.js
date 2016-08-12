@@ -52,7 +52,7 @@ import KonvaWaveEvent from './interactions/konva-wave-event';
 import WaveEvent from './interactions/wave-event';
 
 // shapes
-// import AnnotatedMarker from './shapes/annotated-marker';
+import AnnotatedMarker from './shapes/annotated-marker';
 import AnnotatedSegment from './shapes/annotated-segment';
 import AnnotatedDot from './shapes/annotated-dot';
 import BaseShape from './shapes/base-shape';
@@ -133,7 +133,7 @@ export default {
   },
 
   shapes: {
-    // AnnotatedMarker, 
+    AnnotatedMarker, 
     AnnotatedSegment, AnnotatedDot, BaseShape, Cursor, 
     Dot, Line, Marker, Segment, 
     Ticks, TraceDots, TracePath, Waveform, 

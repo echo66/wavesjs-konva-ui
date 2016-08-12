@@ -12,6 +12,7 @@ export default class SimpleEditionState extends BaseState {
     this.autoUpdateShapes = (autoUpdateShapes === undefined)? true : autoUpdateShapes;
     this.currentEditedLayer = null;
     this.currentTarget = null;
+    this.lastEventType = null;
   }
 
   enter() {}
@@ -32,6 +33,7 @@ export default class SimpleEditionState extends BaseState {
         this.onMouseUp(e);
         break;
     }
+    this.lastEventType = e.type;
   }
 
   onMouseDown(e) {
@@ -101,6 +103,9 @@ export default class SimpleEditionState extends BaseState {
     const datums = layer.selectedDatums;
     const that = this;
 
+    if (this.lastEventType === 'mousedown') 
+      layer.emit('start-edit', datums);
+
     layer.edit(datums, e.dx, e.dy, this.currentTarget);
     if (that.autoUpdateShapes)
       layer.updateShapes(datums);
@@ -120,6 +125,9 @@ export default class SimpleEditionState extends BaseState {
     layer.selectedDatums.forEach((datum) => {
       layer.getShapeFromDatum(datum).stopDrag();
     });
+    if (this.lastEventType === 'mousemove') {
+      layer.emit('end-edit', layer.selectedDatums);
+    }
     this.currentEditedLayer = null;
   }
 }

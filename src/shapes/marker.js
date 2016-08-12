@@ -29,6 +29,7 @@ export default class Marker extends BaseShape {
 
   _getDefaults() {
     return {
+      x: undefined, 
       handlerWidth: undefined,
       handlerHeight: undefined,
       displayHandler: undefined,
@@ -68,7 +69,7 @@ export default class Marker extends BaseShape {
 
     if (!this.visible)  return;
 
-    const x = renderingContext.timeToPixel(this.x(d)) - 0.5;
+    const x = this.params.x || renderingContext.timeToPixel(this.x(d)) - 0.5; //TODO: for 0 and undefined, the boolean condition will return the same.
     const height = renderingContext.height;
     const handlerWidth = this.params.handlerWidth || this.handlerWidth(d);
     const handlerHeight = this.params.handlerHeight || this.handlerHeight(d);
